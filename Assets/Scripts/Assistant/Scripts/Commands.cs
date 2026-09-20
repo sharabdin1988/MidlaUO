@@ -1064,6 +1064,32 @@ namespace Assistant.Scripts
             { "up", Direction.Up }
         };
 
+        /// <summary>
+        /// Разбор направления для команд walk/run.
+        /// Терпит формат старого рекордера ("Left, Running"): Direction — это
+        /// [Flags]-enum с Running = 0x80, поэтому шаг бегом записывался как
+        /// "Left, Running", не находился в _Directions, очередь оставалась пустой,
+        /// и Dequeue() падал с InvalidOperationException, обрывая скрипт.
+        /// </summary>
+        private static bool TryParseDirection(string text, out Direction direction)
+        {
+            direction = Direction.North;
+
+            if (string.IsNullOrEmpty(text))
+                return false;
+
+            string key = text.Trim().ToLowerInvariant();
+            int comma = key.IndexOf(',');
+
+            if (comma >= 0)
+                key = key.Substring(0, comma).Trim();
+
+            if (key.Length == 0 || key == "running")
+                return false;
+
+            return _Directions.TryGetValue(key, out direction);
+        }
+
         private static Queue<Direction> _MoveDirection = new Queue<Direction>();
         private static bool Walk(string command, Argument[] args, bool quiet, bool force)
         {
@@ -1077,7 +1103,7 @@ namespace Assistant.Scripts
                 _MoveDirection.Clear();
                 for(int i = 0; i < args.Length; i++)
                 {
-                    if(_Directions.TryGetValue(args[i].AsString().ToLower(), out Direction d))
+                    if (TryParseDirection(args[i].AsString(), out Direction d))
                     {
                         _MoveDirection.Enqueue(d);
                     }
@@ -1095,6 +1121,12 @@ namespace Assistant.Scripts
                                                                              Client.Game.UO.World.Player.SpeedMode == CharacterSpeedType.FastUnmountAndCantRun ||
                                                                              Client.Game.UO.World.Player.IsFlying
                                                                              ));
+
+            if (_MoveDirection.Count < 1)
+            {
+                ScriptManager.Error(quiet, $"'{command}': no valid direction");
+                return true;
+            }
 
             Direction dir = _MoveDirection.Dequeue();
             if ((UOSObjects.Player.Direction & Direction.Up) != dir)
@@ -1132,7 +1164,7 @@ namespace Assistant.Scripts
                 _MoveDirection.Clear();
                 for (int i = 0; i < args.Length; i++)
                 {
-                    if (_Directions.TryGetValue(args[i].AsString().ToLower(), out Direction d))
+                    if (TryParseDirection(args[i].AsString(), out Direction d))
                     {
                         _MoveDirection.Enqueue(d);
                     }
@@ -1150,6 +1182,12 @@ namespace Assistant.Scripts
                                                                              Client.Game.UO.World.Player.SpeedMode == CharacterSpeedType.FastUnmountAndCantRun ||
                                                                              Client.Game.UO.World.Player.IsFlying
                                                                              ));
+
+            if (_MoveDirection.Count < 1)
+            {
+                ScriptManager.Error(quiet, $"'{command}': no valid direction");
+                return true;
+            }
 
             Direction dir = _MoveDirection.Dequeue();
             if ((UOSObjects.Player.Direction & Direction.Up) != dir)
