@@ -1075,7 +1075,20 @@ namespace UOScript
                 return true;
             }
 
-            var cont = handler(node.Lexeme, ConstructArguments(ref node), quiet, force);
+            bool cont;
+
+            try
+            {
+                cont = handler(node.Lexeme, ConstructArguments(ref node), quiet, force);
+            }
+            catch (Exception e)
+            {
+                // Обработчики команд не должны ронять исполнение скрипта исключением:
+                // таймер вызывает OnTick() напрямую, без try/catch, и ошибка вылетала
+                // в лог клиента (например, "Queue empty" из walk/run).
+                new RunTimeError(node, $"'{node.Lexeme}': {e.Message}");
+                return true;
+            }
 
             if (node != null)
             {

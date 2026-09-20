@@ -8,6 +8,8 @@ on:
   pull_request:
     branches:
       - dev
+  # Ручной запуск сборки из любой ветки (наш форк MidlaUO)
+  workflow_dispatch:
 
 permissions:
   contents: write

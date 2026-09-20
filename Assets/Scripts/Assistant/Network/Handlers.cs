@@ -595,7 +595,16 @@ namespace Assistant
 
                 UOSObjects.Player.Direction = (dir & Direction.Up);
                 if (ScriptManager.Recording)
-                    ScriptManager.AddToScript($"walk '{dir}'");
+                {
+                    // Direction — это [Flags]-enum с Running = 0x80, поэтому шаг бегом
+                    // давал строку вида "Left, Running": команда walk не находила такое
+                    // направление, очередь оставалась пустой и скрипт падал на Dequeue().
+                    // Пишем корректно: walk 'Left' или run 'Left' (бег — отдельная команда).
+                    bool running = (dir & Direction.Running) != 0;
+                    Direction walkDir = (Direction)((byte)dir & (byte)Direction.Up);
+
+                    ScriptManager.AddToScript($"{(running ? "run" : "walk")} '{walkDir}'");
+                }
             }
         }
 
