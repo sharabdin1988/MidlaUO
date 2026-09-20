@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.IO;
 using ClassicUO.Utility;
@@ -53,6 +53,9 @@ namespace ClassicUO.Assets
 
         public override void Load()
         {
+            // карта патчей verdata.mul (FileID 6) строится заново при каждой загрузке файлов
+            _verdataAnimationBlocks = null;
+
             for (int i = 0; i < _files.Length; i++)
             {
                 var pathmul = FileManager.GetUOFilePath("anim" + (i == 0 ? string.Empty : (i + 1).ToString()) + ".mul");
@@ -357,7 +360,100 @@ namespace ClassicUO.Assets
             }
 
             ArrayPool<AnimIdxBlock>.Shared.Return(indicesBuf);
+
+            // Патчи verdata.mul применяются только к anim.mul (fileIndex == 0):
+            // в остальных файлах (anim2..5.mul) нумерация блоков своя.
+            if (fileIndex == 0)
+            {
+                ApplyVerdataPatches(directions, offsetAddress / sizeof(AnimIdxBlock));
+            }
+
             return directions;
+        }
+
+        private Dictionary<uint, UOFileIndex5D> _verdataAnimationBlocks;
+
+        /// <summary>
+        /// Патчи verdata.mul для anim.mul (FileID 6), разложенные по номеру блока.
+        /// Строится лениво, при первом обращении.
+        /// </summary>
+        private Dictionary<uint, UOFileIndex5D> VerdataAnimationBlocks
+        {
+            get
+            {
+                if (_verdataAnimationBlocks == null)
+                {
+                    _verdataAnimationBlocks = new Dictionary<uint, UOFileIndex5D>();
+
+                    var verdata = FileManager.Verdata;
+
+                    if (verdata?.File != null)
+                    {
+                        for (var i = 0; i < verdata.Patches.Length; ++i)
+                        {
+                            ref readonly var patch = ref verdata.Patches[i];
+
+                            if (patch.FileID == 6)
+                            {
+                                _verdataAnimationBlocks[patch.BlockID] = patch;
+                            }
+                        }
+                    }
+                }
+
+                return _verdataAnimationBlocks;
+            }
+        }
+
+        /// <summary>
+        /// Накладывает патчи verdata.mul на индексы анимаций.
+        /// FileID 6 — это anim.mul: патч заменяет блок (тело + действие + направление)
+        /// данными из verdata.mul. Без этого графика, которая есть только в verdata
+        /// (кастомные ездовые животные, крылья и т.п. на фришардах), не рисуется.
+        /// FileID 5 (патч самого anim.idx) здесь не поддержан.
+        /// </summary>
+        private void ApplyVerdataPatches(AnimationDirection[] directions, long firstBlockIndex)
+        {
+            var patches = VerdataAnimationBlocks;
+
+            if (patches.Count == 0)
+            {
+                return;
+            }
+
+            for (var i = 0; i < directions.Length; ++i)
+            {
+                var blockIndex = firstBlockIndex + i;
+
+                if (blockIndex < 0 || blockIndex > uint.MaxValue)
+                {
+                    continue;
+                }
+
+                if (!patches.TryGetValue((uint)blockIndex, out var patch))
+                {
+                    continue;
+                }
+
+                ref var dir = ref directions[i];
+
+                if (patch.Length == 0)
+                {
+                    // маркер «удалить блок»: данных нет
+                    dir.Position = 0;
+                    dir.Size = 0;
+                    dir.UncompressedSize = 0;
+                }
+                else
+                {
+                    dir.Position = patch.Position;
+                    dir.Size = patch.Length;
+                    dir.UncompressedSize = 0;
+                }
+
+                dir.CompressionType = CompressionType.None;
+                dir.IsVerdata = true;
+            }
         }
 
         private long CalculateOffset(
@@ -1429,9 +1525,9 @@ namespace ClassicUO.Assets
             }
         }
 
-        public Span<FrameInfo> ReadMULAnimationFrames(int fileIndex, AnimationDirection index)
+        public Span<FrameInfo> ReadMULAnimationFrames(int fileIndex, AnimationDirection index, bool isVerdata = false)
         {
-            if (fileIndex < 0 || fileIndex >= _files.Length)
+            if (!isVerdata && (fileIndex < 0 || fileIndex >= _files.Length))
             {
                 return Span<FrameInfo>.Empty;
             }
@@ -1446,9 +1542,11 @@ namespace ClassicUO.Assets
                 return Span<FrameInfo>.Empty;
             }
 
-            var file = _files[fileIndex];
+            // Блоки, пришедшие из патча verdata.mul, читаются из самого verdata.mul:
+            // anim*.mul таких данных не содержит вообще.
+            var file = isVerdata ? FileManager.Verdata?.File : _files[fileIndex];
 
-            if (index.Position + index.Size > file.Length)
+            if (file == null || index.Position + index.Size > file.Length)
             {
                 return Span<FrameInfo>.Empty;
             }
@@ -1616,6 +1714,11 @@ namespace ClassicUO.Assets
             public uint Size;
             public uint UncompressedSize;
             public CompressionType CompressionType;
+
+            /// <summary>
+            /// Блок лежит в verdata.mul (патч FileID 6), а не в anim*.mul.
+            /// </summary>
+            public bool IsVerdata;
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
