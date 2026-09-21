@@ -1,0 +1,48 @@
+name: Unity manual activation file (.alf)
+
+# Выдаёт файл ручной активации Unity (Unity_v<версия>.alf), который нужен,
+# чтобы получить бесплатную лицензию Unity Personal для сборки в CI:
+#
+#   1. запустить этот workflow (Actions -> "Unity manual activation file" -> Run workflow)
+#   2. скачать артефакт unity-manual-activation-file (.alf)
+#   3. загрузить .alf на https://license.unity3d.com/manual (нужен аккаунт Unity)
+#      и выбрать Unity Personal -> скачать Unity_v<версия>.ulf
+#   4. положить содержимое .ulf в секрет UNITY_LICENSE, плюс UNITY_EMAIL и
+#      UNITY_PASSWORD (пароль аккаунта Unity; 2FA на аккаунте должен быть ВЫКЛЮЧЕН)
+#
+# Аккаунт Unity для запуска этого workflow НЕ нужен - файл .alf создаётся
+# редактором Unity в batch-режиме и не требует никакой лицензии.
+on:
+  workflow_dispatch:
+    inputs:
+      unityVersion:
+        description: 'Версия Unity (должна совпадать с ProjectSettings/ProjectVersion.txt)'
+        required: false
+        default: '6000.3.8f1'
+      imageTag:
+        description: 'Тег образа game-ci (модуль base = только редактор)'
+        required: false
+        default: '3.2.2'
+
+jobs:
+  request-activation-file:
+    name: Request activation file
+    runs-on: ubuntu-latest
+    steps:
+      - name: Скачать образ Unity
+        run: docker pull "unityci/editor:ubuntu-${{ inputs.unityVersion }}-base-${{ inputs.imageTag }}"
+
+      - name: Создать файл ручной активации
+        run: |
+          set -x
+          docker run --rm -v "$PWD":/project -w /project \
+            "unityci/editor:ubuntu-${{ inputs.unityVersion }}-base-${{ inputs.imageTag }}" \
+            unity-editor -nographics -logFile - -createManualActivationFile -quit
+          ls -la
+
+      - name: Загрузить .alf как артефакт
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-manual-activation-file
+          path: "*.alf"
+          if-no-files-found: error
