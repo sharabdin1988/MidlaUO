@@ -10,6 +10,11 @@ on:
       - dev
   # Ручной запуск сборки из любой ветки (наш форк MidlaUO)
   workflow_dispatch:
+    inputs:
+      build_env:
+        description: 'Профиль сборки: Midla (обычная) или MidlaDebug (отладка с дампом окон)'
+        required: false
+        default: 'Midla'
 
 permissions:
   contents: write
@@ -95,7 +100,7 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          BUILD_ENV: Midla
+          BUILD_ENV: ${{ inputs.build_env || 'Midla' }}
           GITHUB_BUILD_NUMBER: ${{ github.run_number }}
         with:
           dockerWorkspacePath: /github/workspace

@@ -3808,6 +3808,9 @@ namespace ClassicUO.Network
             //    index += length;
             //}
 
+            // диагностика мобильного интерфейса: сохраняем серверное окно в файл
+            ClassicUO.MobileUI.GumpDump.Record(sender, gumpID, x, y, cmd, lines);
+
             CreateGump(world, sender, gumpID, x, y, cmd, lines);
         }
 
