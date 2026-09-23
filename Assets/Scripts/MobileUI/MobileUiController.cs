@@ -8,6 +8,7 @@
 // Всё живёт в отдельных файлах (Assets/Scripts/MobileUI/*) и в штатный код
 // клиента врезается тремя однострочными хуками — так обновляться проще.
 
+using System;
 using System.Linq;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
