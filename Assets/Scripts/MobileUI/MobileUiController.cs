@@ -85,6 +85,35 @@ namespace ClassicUO.MobileUI
             Log.Info($"[MobileUI] язык интерфейса: {Config.Language}");
         }
 
+        /// <summary>Открыть экран рюкзака (мобильный список предметов).</summary>
+        public static void OpenBackpack()
+        {
+            Init();
+
+            var world = ClassicUO.Client.Game.UO.World;
+
+            if (world == null || world.Player == null)
+            {
+                return;
+            }
+
+            var backpack = world.Player.FindItemByLayer(ClassicUO.Game.Data.Layer.Backpack);
+
+            if (backpack == null)
+            {
+                return;
+            }
+
+            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.LocalSerial == backpack.Serial);
+
+            if (existing != null)
+            {
+                existing.Dispose();
+            }
+
+            UIManager.Add(new MobileContainerGump(world, backpack.Serial));
+        }
+
         /// <summary>Открыть (или пересоздать) панель настроек, чтобы подписи были актуальными.</summary>
         public static void OpenSettings()
         {

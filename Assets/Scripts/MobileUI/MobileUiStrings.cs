@@ -28,6 +28,12 @@ namespace ClassicUO.MobileUI
             ["data_folder"]     = new[] { "Папка данных", "Data folder" },
             ["hint_switch"]     = new[] { "Нажми, чтобы переключить", "Tap to switch" },
             ["hint_button"]     = new[] { "Кнопку «Моб. UI» можно перетаскивать", "The “Mobile UI” button can be dragged" },
+            ["container"]         = new[] { "Контейнер", "Container" },
+            ["container_summary"] = new[] { "Предметов: {0} · вес: {1}", "Items: {0} · weight: {1}" },
+            ["container_empty"]   = new[] { "Пусто", "Empty" },
+            ["open_backpack"]     = new[] { "Открыть сумку", "Open backpack" },
+            ["refresh"]           = new[] { "Обновить", "Refresh" },
+            ["weight_short"]      = new[] { "в.", "w" },
             ["screens_soon"]    = new[] { "Экраны: сумка, рунбук, крафт — в работе", "Screens: backpack, runebook, crafting — in progress" },
         };
 

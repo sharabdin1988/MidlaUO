@@ -105,6 +105,25 @@ namespace ClassicUO.Game.UI.Gumps
                 Y = 116
             });
 
+            Add(new Button(3, 0x0481, 0x0482, 0x0483)
+            {
+                X = 24,
+                Y = 162,
+                ButtonAction = ButtonAction.Activate
+            });
+
+            Add(new Label(
+                ClassicUO.MobileUI.MobileUiController.T("open_backpack"),
+                true,
+                0x0035,
+                Width_ - 40,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 66,
+                Y = 168
+            });
+
             Add(new Button(2, 0x0481, 0x0482, 0x0483)
             {
                 X = 24,
@@ -173,6 +192,11 @@ namespace ClassicUO.Game.UI.Gumps
                     ClassicUO.MobileUI.MobileUiController.ToggleLanguage();
 
                     break;
+
+                case 3:
+                    ClassicUO.MobileUI.MobileUiController.OpenBackpack();
+
+                    return;
 
                 case 0:
                 default:
