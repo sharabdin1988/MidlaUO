@@ -5,6 +5,7 @@
 // нажатию открывает панель настроек мобильного интерфейса.
 
 using System;
+using ClassicUO.Assets;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Renderer;

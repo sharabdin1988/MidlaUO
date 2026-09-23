@@ -5,6 +5,7 @@
 //   * язык интерфейса (русский / английский).
 // Оба сохраняются в mobileui.json рядом с данными шарда.
 
+using ClassicUO.Assets;
 using ClassicUO.Game.UI.Controls;
 
 namespace ClassicUO.Game.UI.Gumps
