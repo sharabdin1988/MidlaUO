@@ -1524,14 +1524,28 @@ namespace ClassicUO.Network
                         playsound = true;
                     }
 
-                    UIManager.Add(
-                        new ContainerGump(world, item, graphic, playsound)
-                        {
-                            X = x,
-                            Y = y,
-                            InvalidateContents = true
-                        }
-                    );
+                    if (ClassicUO.MobileUI.MobileUiController.Enabled)
+                    {
+                        // MidlaUO: мобильный список предметов вместо мелкой штатной сумки
+                        UIManager.Add(
+                            new MobileContainerGump(world, item.Serial)
+                            {
+                                X = x,
+                                Y = y
+                            }
+                        );
+                    }
+                    else
+                    {
+                        UIManager.Add(
+                            new ContainerGump(world, item, graphic, playsound)
+                            {
+                                X = x,
+                                Y = y,
+                                InvalidateContents = true
+                            }
+                        );
+                    }
 
                     UIManager.RemovePosition(serial);
                 }
@@ -2123,6 +2137,9 @@ namespace ClassicUO.Network
 
                 AddItemToContainer(world, serial, graphic, amount, x, y, hue, containerSerial);
             }
+
+            // MidlaUO: перечитать открытые мобильные списки контейнеров
+            ClassicUO.MobileUI.MobileUiController.OnContainerUpdated();
         }
 
         private static void CloseVendorInterface(World world, ref StackDataReader p)

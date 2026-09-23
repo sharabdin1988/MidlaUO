@@ -49,6 +49,21 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.None;
 
+        private DateTime _lastRebuild = DateTime.MinValue;
+
+        /// <summary>Перечитать содержимое (вызывается, когда сервер присылает предметы).</summary>
+        public void Rebuild()
+        {
+            // сервер может присылать содержимое пачками — не перестраиваем чаще 4 раз в секунду
+            if ((DateTime.UtcNow - _lastRebuild).TotalMilliseconds < 250)
+            {
+                return;
+            }
+
+            _lastRebuild = DateTime.UtcNow;
+            Fill();
+        }
+
         private void Build()
         {
             Add(new ResizePic(0x0A3C)

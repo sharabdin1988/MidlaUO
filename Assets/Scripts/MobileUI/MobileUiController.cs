@@ -85,6 +85,20 @@ namespace ClassicUO.MobileUI
             Log.Info($"[MobileUI] язык интерфейса: {Config.Language}");
         }
 
+        /// <summary>Сервер прислал содержимое контейнера — перечитать открытые мобильные списки.</summary>
+        public static void OnContainerUpdated()
+        {
+            if (Config == null || !Config.Enabled)
+            {
+                return;
+            }
+
+            foreach (var gump in UIManager.Gumps.OfType<MobileContainerGump>())
+            {
+                gump.Rebuild();
+            }
+        }
+
         /// <summary>Открыть экран рюкзака (мобильный список предметов).</summary>
         public static void OpenBackpack()
         {
