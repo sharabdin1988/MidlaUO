@@ -107,14 +107,14 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(_list);
 
-            Add(new NiceButton(1, WinWidth - 200, WinHeight - 32, 90, 24, ButtonAction.Activate,
+            Add(new NiceButton(WinWidth - 200, WinHeight - 32, 90, 24, ButtonAction.Activate,
                 ClassicUO.MobileUI.MobileUiController.T("refresh"))
             {
                 ButtonParameter = 1,
                 IsSelectable = false
             });
 
-            Add(new NiceButton(0, WinWidth - 100, WinHeight - 32, 90, 24, ButtonAction.Activate,
+            Add(new NiceButton(WinWidth - 100, WinHeight - 32, 90, 24, ButtonAction.Activate,
                 ClassicUO.MobileUI.MobileUiController.T("close"))
             {
                 ButtonParameter = 0,
