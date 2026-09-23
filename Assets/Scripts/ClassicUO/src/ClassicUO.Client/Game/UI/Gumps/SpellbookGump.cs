@@ -79,6 +79,12 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.SpellBook;
 
+        // MidlaUO: доступ для мобильного списка заклинаний (сама книга остаётся источником данных)
+        internal bool MobileHasSpell(int index) => index >= 0 && index < _spells.Length && _spells[index];
+        internal int MobileSpellSlots => _spells.Length;
+        internal void MobileGetSpellNames(int index, out string name, out string reagents) =>
+            GetSpellNames(index, out name, out _, out reagents);
+
         public override void Save(XmlTextWriter writer)
         {
             base.Save(writer);

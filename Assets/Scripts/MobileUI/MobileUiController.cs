@@ -153,6 +153,26 @@ namespace ClassicUO.MobileUI
             Config.Save();
         }
 
+        /// <summary>Открыть мобильный список заклинаний для книги.</summary>
+        public static void OpenSpellbook(uint bookSerial)
+        {
+            var world = ClassicUO.Client.Game.UO.World;
+
+            if (world == null)
+            {
+                return;
+            }
+
+            var existing = UIManager.Gumps.OfType<MobileSpellbookGump>().FirstOrDefault(g => g.LocalSerial == bookSerial);
+
+            if (existing != null)
+            {
+                existing.Dispose();
+            }
+
+            UIManager.Add(new MobileSpellbookGump(world, bookSerial));
+        }
+
         /// <summary>Переоткрыть экран контейнера — применяет новый размер окна и строк.</summary>
         public static void ReopenContainer(uint serial)
         {

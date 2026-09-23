@@ -1325,6 +1325,12 @@ namespace ClassicUO.Network
 
                 SpellbookGump spellbookGump = new SpellbookGump(world, spellBookItem);
 
+                // MidlaUO: при включённом мобильном интерфейсе книгу показываем нашим списком
+                if (ClassicUO.MobileUI.MobileUiController.Enabled)
+                {
+                    spellbookGump.IsVisible = false;
+                }
+
                 if (!UIManager.GetGumpCachePosition(spellBookItem, out Point location))
                 {
                     location = new Point(64, 64);
@@ -1332,6 +1338,12 @@ namespace ClassicUO.Network
 
                 spellbookGump.Location = location;
                 UIManager.Add(spellbookGump);
+
+                // MidlaUO: и сразу показываем мобильный список заклинаний
+                if (ClassicUO.MobileUI.MobileUiController.Enabled)
+                {
+                    ClassicUO.MobileUI.MobileUiController.OpenSpellbook(spellBookItem.Serial);
+                }
 
                 Client.Game.Audio.PlaySound(0x0055);
             }

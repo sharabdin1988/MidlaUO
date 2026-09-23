@@ -42,6 +42,10 @@ namespace ClassicUO.MobileUI
             ["size_big"]          = new[] { "Размер: крупный", "Size: big" },
             ["equipment"]        = new[] { "Экипировка", "Equipment" },
             ["container_not_found"] = new[] { "Ничего не найдено", "Nothing found" },
+            ["spellbook"]         = new[] { "Книга заклинаний", "Spellbook" },
+            ["spellbook_summary"] = new[] { "Заклинаний: {0} · нажми, чтобы прочитать", "Spells: {0} · tap to cast" },
+            ["spellbook_wait"]    = new[] { "Ждём список заклинаний от сервера…", "Waiting for the spell list…" },
+            ["spell"]             = new[] { "Заклинание", "Spell" },
             ["screens_soon"]    = new[] { "Экраны: сумка, рунбук, крафт — в работе", "Screens: backpack, runebook, crafting — in progress" },
         };
 
