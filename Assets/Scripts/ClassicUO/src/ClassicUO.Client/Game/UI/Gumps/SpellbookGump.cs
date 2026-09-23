@@ -80,6 +80,25 @@ namespace ClassicUO.Game.UI.Gumps
         public override GumpType GumpType => GumpType.SpellBook;
 
         // MidlaUO: доступ для мобильного списка заклинаний (сама книга остаётся источником данных)
+        private bool _mobileHandled;
+
+        /// <summary>
+        /// MidlaUO: при включённом мобильном интерфейсе штатная книга прячется, а вместо неё
+        /// открывается наш список. Проверка живёт здесь, а не в обработчике пакета, потому что
+        /// книгу можно открыть и восстановлением из профиля — там сетевой код не участвует.
+        /// </summary>
+        private void MobileCheck()
+        {
+            if (_mobileHandled || !ClassicUO.MobileUI.MobileUiController.Enabled || LocalSerial == 0)
+            {
+                return;
+            }
+
+            _mobileHandled = true;
+            IsVisible = false;
+            ClassicUO.MobileUI.MobileUiController.OpenSpellbook(LocalSerial);
+        }
+
         internal bool MobileHasSpell(int index) => index >= 0 && index < _spells.Length && _spells[index];
         internal int MobileSpellSlots => _spells.Length;
         internal void MobileGetSpellNames(int index, out string name, out string reagents) =>
@@ -1298,6 +1317,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Update()
         {
+            MobileCheck();
+
             base.Update();
 
             Item item = World.Items.Get(LocalSerial);

@@ -163,7 +163,7 @@ namespace ClassicUO.MobileUI
                 return;
             }
 
-            var existing = UIManager.Gumps.OfType<MobileSpellbookGump>().FirstOrDefault(g => g.LocalSerial == bookSerial);
+            var existing = UIManager.Gumps.OfType<MobileSpellbookGump>().FirstOrDefault(g => g.BookSerial == bookSerial);
 
             if (existing != null)
             {
@@ -183,14 +183,20 @@ namespace ClassicUO.MobileUI
                 return;
             }
 
-            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.LocalSerial == serial);
+            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.ContainerSerial == serial);
+
+            int x = 60;
+            int y = 120;
 
             if (existing != null)
             {
+                // запоминаем позицию и закрываем старое окно, иначе остаётся дубль
+                x = existing.X;
+                y = existing.Y;
                 existing.Dispose();
             }
 
-            UIManager.Add(new MobileContainerGump(world, serial));
+            UIManager.Add(new MobileContainerGump(world, serial) { X = x, Y = y });
         }
 
         /// <summary>Открыть экран рюкзака (мобильный список предметов).</summary>
@@ -212,7 +218,7 @@ namespace ClassicUO.MobileUI
                 return;
             }
 
-            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.LocalSerial == backpack.Serial);
+            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.ContainerSerial == backpack.Serial);
 
             if (existing != null)
             {

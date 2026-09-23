@@ -41,6 +41,9 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.None;
 
+        /// <summary>Серийник книги (LocalSerial у гумпа нулевой).</summary>
+        public uint BookSerial => _bookSerial;
+
         private SpellbookGump Source => UIManager.Gumps.OfType<SpellbookGump>().FirstOrDefault(g => g.LocalSerial == _bookSerial);
 
         private void Build()

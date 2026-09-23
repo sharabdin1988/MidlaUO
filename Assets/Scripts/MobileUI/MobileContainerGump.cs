@@ -75,6 +75,9 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.None;
 
+        /// <summary>Серийник контейнера, который показывает это окно (LocalSerial у гумпа нулевой).</summary>
+        public uint ContainerSerial => _containerSerial;
+
         private DateTime _lastRebuild = DateTime.MinValue;
 
         /// <summary>Перечитать содержимое (вызывается, когда сервер присылает предметы).</summary>
