@@ -191,6 +191,13 @@ namespace ClassicUO.Assets
             // MobileUO: TODO: getting a CRC error from zlib - revisit this later - it isn't currently used
             //StringDictionary.Load();
 
+            // MobileUO: verdata.mul не читался вовсе - Verdata.File оставался null,
+            // поэтому НИ ОДИН патч шарда не применялся: ни арт (кастомные скины,
+            // маски рас), ни гамп-арт, ни tiledata, ни анимации. В ClassicUO этот
+            // вызов когда-то забыли и добавили только в сентябре 2025 (PR #1813),
+            // а MobileUO отстал от апстрима и живёт без него.
+            Verdata.Load();
+
             ReadArtDefFile();
 
             var verdata = Verdata.File;
