@@ -105,6 +105,9 @@ namespace ClassicUO.Game.Scenes
         {
             base.Load();
 
+            // MidlaUO: мобильный интерфейс (настройки + экранная кнопка)
+            ClassicUO.MobileUI.MobileUiController.Init();
+
             Client.Game.Window.AllowUserResizing = true;
 
             Camera.Zoom = ProfileManager.CurrentProfile.DefaultScale;

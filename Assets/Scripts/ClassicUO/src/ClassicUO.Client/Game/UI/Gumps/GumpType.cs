@@ -32,6 +32,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         // MobileUO: Assisstant buttons
         AssistantMacroButton,
+        MobileUiButton,
         AssistantHotkeyButton
 
     }

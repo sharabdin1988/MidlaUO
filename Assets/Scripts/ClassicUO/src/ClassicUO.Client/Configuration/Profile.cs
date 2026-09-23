@@ -599,6 +599,10 @@ namespace ClassicUO.Configuration
                                 case GumpType.AssistantHotkeyButton:
                                     gump = new AssistantHotkeyButtonGump(world);
                                     break;
+                                // MidlaUO: экранная кнопка мобильного интерфейса
+                                case GumpType.MobileUiButton:
+                                    gump = new MobileUiButtonGump(world);
+                                    break;
 
                                 case GumpType.MiniMap:
                                     gump = new MiniMapGump(world);
