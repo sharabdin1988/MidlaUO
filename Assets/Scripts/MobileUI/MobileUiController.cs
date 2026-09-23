@@ -38,7 +38,45 @@ namespace ClassicUO.MobileUI
             }
 
             Config = MobileUiConfig.Load();
+            EnableReconnectAndAutoLogin();
             EnsureButton();
+        }
+
+        /// <summary>
+        /// Включить автологин и автопереподключение: у клиента это уже есть
+        /// (Settings.GlobalSettings.Reconnect — при обрыве сам возвращается ко входу,
+        /// AutoLogin — сам входит). Без них после сворачивания игра остаётся
+        /// на экране «Connection lost», и надо входить вручную.
+        /// </summary>
+        private static void EnableReconnectAndAutoLogin()
+        {
+            try
+            {
+                var settings = ClassicUO.Configuration.Settings.GlobalSettings;
+                bool changed = false;
+
+                if (!settings.Reconnect)
+                {
+                    settings.Reconnect = true;
+                    changed = true;
+                }
+
+                if (!settings.AutoLogin)
+                {
+                    settings.AutoLogin = true;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    settings.Save();
+                    Log.Info("[MobileUI] включены автологин и автопереподключение");
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[MobileUI] не удалось включить автологин: {ex.Message}");
+            }
         }
 
         /// <summary>Показать экранную кнопку, если её ещё нет.</summary>
