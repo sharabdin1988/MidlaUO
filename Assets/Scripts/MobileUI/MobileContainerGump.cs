@@ -43,9 +43,14 @@ namespace ClassicUO.Game.UI.Gumps
         private const int HeaderHeight = 78;
         private const int FooterHeight = 38;
 
-        private readonly int _width;
-        private readonly int _height;
-        private readonly int _rowHeight;
+        private int _width;
+        private int _height;
+        private int _rowHeight;
+
+        private ResizePic _background;
+        private Label _title;
+        private Label _searchCaption;
+        private NiceButton _btnMinus, _btnPlus, _btnEquip, _btnSize, _btnRefresh, _btnClose;
         private StbTextBox _search;
         private bool _showEquipment;
 
@@ -129,11 +134,13 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(_summary);
 
-            Add(new Label(ClassicUO.MobileUI.MobileUiController.T("search"), true, 0x03B2, 70, 255, FontStyle.BlackBorder)
+            _searchCaption = new Label(ClassicUO.MobileUI.MobileUiController.T("search"), true, 0x03B2, 70, 255, FontStyle.BlackBorder)
             {
                 X = 16,
                 Y = 54
-            });
+            };
+
+            Add(_searchCaption);
 
             _search = new StbTextBox(255, 40, _width - 150, true, FontStyle.BlackBorder, 0xFFFF)
             {
@@ -157,33 +164,26 @@ namespace ClassicUO.Game.UI.Gumps
             int bx = 10;
             int by = _height - 32;
 
-            Add(new NiceButton(bx, by, 30, 24, ButtonAction.Activate, "-") { ButtonParameter = 4, IsSelectable = false });
-            Add(new NiceButton(bx + 34, by, 30, 24, ButtonAction.Activate, "+") { ButtonParameter = 5, IsSelectable = false });
-            Add(new NiceButton(bx + 72, by, 130, 24, ButtonAction.Activate,
-                ClassicUO.MobileUI.MobileUiController.T("equipment"))
-            {
-                ButtonParameter = 7,
-                IsSelectable = false
-            });
-            Add(new NiceButton(bx + 206, by, 120, 24, ButtonAction.Activate, SizeLabel())
-            {
-                ButtonParameter = 6,
-                IsSelectable = false
-            });
+            _btnMinus = new NiceButton(bx, by, 30, 24, ButtonAction.Activate, "-") { ButtonParameter = 4, IsSelectable = false };
+            _btnPlus = new NiceButton(bx + 34, by, 30, 24, ButtonAction.Activate, "+") { ButtonParameter = 5, IsSelectable = false };
+            _btnEquip = new NiceButton(bx + 72, by, 130, 24, ButtonAction.Activate,
+                ClassicUO.MobileUI.MobileUiController.T("equipment")) { ButtonParameter = 7, IsSelectable = false };
+            _btnSize = new NiceButton(bx + 206, by, 120, 24, ButtonAction.Activate, SizeLabel()) { ButtonParameter = 6, IsSelectable = false };
 
-            Add(new NiceButton(_width - 200, _height - 32, 90, 24, ButtonAction.Activate,
-                ClassicUO.MobileUI.MobileUiController.T("refresh"))
-            {
-                ButtonParameter = 1,
-                IsSelectable = false
-            });
+            Add(_btnMinus);
+            Add(_btnPlus);
+            Add(_btnEquip);
+            Add(_btnSize);
 
-            Add(new NiceButton(_width - 100, _height - 32, 90, 24, ButtonAction.Activate,
-                ClassicUO.MobileUI.MobileUiController.T("close"))
-            {
-                ButtonParameter = 0,
-                IsSelectable = false
-            });
+            _btnRefresh = new NiceButton(_width - 200, _height - 32, 90, 24, ButtonAction.Activate,
+                ClassicUO.MobileUI.MobileUiController.T("refresh")) { ButtonParameter = 1, IsSelectable = false };
+
+            Add(_btnRefresh);
+
+            _btnClose = new NiceButton(_width - 100, _height - 32, 90, 24, ButtonAction.Activate,
+                ClassicUO.MobileUI.MobileUiController.T("close")) { ButtonParameter = 0, IsSelectable = false };
+
+            Add(_btnClose);
 
             Fill();
         }
@@ -303,6 +303,69 @@ namespace ClassicUO.Game.UI.Gumps
             }
         }
 
+        /// <summary>
+        /// Пересчитать размеры окна и строк БЕЗ создания нового окна: меняем размеры
+        /// и позиции уже существующих элементов, затем перечитываем список.
+        /// </summary>
+        private void ApplyLayout()
+        {
+            var cfg = ClassicUO.MobileUI.MobileUiController.Config;
+            int preset = cfg != null ? Math.Max(0, Math.Min(2, cfg.WindowPreset)) : 1;
+
+            _width = Presets[preset][0];
+            _height = Presets[preset][1];
+            _rowHeight = cfg != null ? Math.Max(28, Math.Min(72, cfg.RowHeight)) : 44;
+
+            Width = _width;
+            Height = _height;
+
+            if (_background != null)
+            {
+                _background.Width = _width;
+                _background.Height = _height;
+            }
+
+            if (_title != null) _title.Width = _width - 130;
+            if (_summary != null) _summary.Width = _width - 130;
+
+            if (_search != null)
+            {
+                _search.Width = _width - 160;
+            }
+
+            if (_list != null)
+            {
+                _list.Width = _width - 20;
+                _list.Height = _height - HeaderHeight - FooterHeight;
+            }
+
+            int by = _height - 32;
+
+            if (_btnMinus != null) _btnMinus.Y = by;
+            if (_btnPlus != null) _btnPlus.Y = by;
+            if (_btnEquip != null) _btnEquip.Y = by;
+            if (_btnSize != null) _btnSize.Y = by;
+            if (_btnRefresh != null) { _btnRefresh.X = _width - 200; _btnRefresh.Y = by; }
+            if (_btnClose != null) { _btnClose.X = _width - 100; _btnClose.Y = by; }
+
+            // у NiceButton нет свойства Text, поэтому кнопку размера пересоздаём
+            // (это одна маленькая кнопка — само окно при этом не пересоздаётся)
+            if (_btnSize != null)
+            {
+                _btnSize.Dispose();
+            }
+
+            _btnSize = new NiceButton(282, by, 120, 24, ButtonAction.Activate, SizeLabel())
+            {
+                ButtonParameter = 6,
+                IsSelectable = false
+            };
+
+            Add(_btnSize);
+
+            Fill();
+        }
+
         private string SizeLabel()
         {
             var cfg = ClassicUO.MobileUI.MobileUiController.Config;
@@ -344,19 +407,19 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case 4:
                     ClassicUO.MobileUI.MobileUiController.ChangeRowHeight(-6);
-                    ClassicUO.MobileUI.MobileUiController.ReopenContainer(_containerSerial);
+                    ApplyLayout();
 
                     return;
 
                 case 5:
                     ClassicUO.MobileUI.MobileUiController.ChangeRowHeight(6);
-                    ClassicUO.MobileUI.MobileUiController.ReopenContainer(_containerSerial);
+                    ApplyLayout();
 
                     return;
 
                 case 6:
                     ClassicUO.MobileUI.MobileUiController.CycleWindowPreset();
-                    ClassicUO.MobileUI.MobileUiController.ReopenContainer(_containerSerial);
+                    ApplyLayout();
 
                     return;
 
