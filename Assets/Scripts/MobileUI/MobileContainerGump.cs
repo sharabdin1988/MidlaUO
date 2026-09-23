@@ -64,7 +64,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             _width = Presets[preset][0];
             _height = Presets[preset][1];
-            _rowHeight = cfg != null ? Math.Max(28, Math.Min(72, cfg._rowHeight)) : 44;
+            _rowHeight = cfg != null ? Math.Max(28, Math.Min(72, cfg.RowHeight)) : 44;
 
             CanMove = true;
             AcceptMouseInput = true;
