@@ -24,11 +24,29 @@ namespace ClassicUO.Game.UI.Gumps
 {
     internal class MobileContainerGump : Gump
     {
-        private const int WinWidth = 620;
-        private const int WinHeight = 420;
-        private const int RowHeight = 44;
-        private const int HeaderHeight = 46;
-        private const int FooterHeight = 40;
+        private static readonly int[][] Presets =
+        {
+            new[] { 460, 330 },
+            new[] { 620, 430 },
+            new[] { 780, 540 }
+        };
+
+        private static readonly Layer[] EquipmentSlots =
+        {
+            Layer.OneHanded, Layer.TwoHanded, Layer.Helmet, Layer.Torso, Layer.Tunic,
+            Layer.Shirt, Layer.Pants, Layer.Shoes, Layer.Gloves, Layer.Cloak,
+            Layer.Robe, Layer.Waist, Layer.Necklace, Layer.Ring, Layer.Bracelet,
+            Layer.Earrings, Layer.Backpack, Layer.Mount
+        };
+
+        private const int HeaderHeight = 78;
+        private const int FooterHeight = 38;
+
+        private readonly int _width;
+        private readonly int _height;
+        private readonly int _rowHeight;
+        private StbTextBox _search;
+        private bool _showEquipment;
 
         private readonly uint _containerSerial;
         private readonly List<uint> _serials = new List<uint>();
@@ -39,6 +57,13 @@ namespace ClassicUO.Game.UI.Gumps
         public MobileContainerGump(World world, uint containerSerial) : base(world, 0, 0)
         {
             _containerSerial = containerSerial;
+
+            var cfg = ClassicUO.MobileUI.MobileUiController.Config;
+            int preset = cfg != null ? Math.Max(0, Math.Min(2, cfg.WindowPreset)) : 1;
+
+            _width = Presets[preset][0];
+            _height = Presets[preset][1];
+            _rowHeight = cfg != null ? Math.Max(28, Math.Min(72, cfg._rowHeight)) : 44;
 
             CanMove = true;
             AcceptMouseInput = true;
@@ -70,12 +95,12 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 X = 0,
                 Y = 0,
-                Width = WinWidth,
-                Height = WinHeight
+                Width = _width,
+                Height = _height
             });
 
-            Width = WinWidth;
-            Height = WinHeight;
+            Width = _width;
+            Height = _height;
 
             Item container = World.Items.Get(_containerSerial);
             string title = container != null ? GetDisplayName(container) : "";
@@ -84,7 +109,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ClassicUO.MobileUI.MobileUiController.T("container") + ": " + title,
                 true,
                 0x0386,
-                WinWidth - 130,
+                _width - 130,
                 255,
                 FontStyle.BlackBorder)
             {
@@ -92,7 +117,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Y = 12
             });
 
-            _summary = new Label("", true, 0x03B2, WinWidth - 130, 255, FontStyle.BlackBorder)
+            _summary = new Label("", true, 0x03B2, _width - 130, 255, FontStyle.BlackBorder)
             {
                 X = 16,
                 Y = 30
@@ -100,21 +125,56 @@ namespace ClassicUO.Game.UI.Gumps
 
             Add(_summary);
 
-            _list = new ScrollArea(10, HeaderHeight, WinWidth - 20, WinHeight - HeaderHeight - FooterHeight, true)
+            Add(new Label(ClassicUO.MobileUI.MobileUiController.T("search"), true, 0x03B2, 70, 255, FontStyle.BlackBorder)
+            {
+                X = 16,
+                Y = 54
+            });
+
+            _search = new StbTextBox(255, 40, _width - 150, true, FontStyle.BlackBorder, 0xFFFF)
+            {
+                X = 80,
+                Y = 54,
+                Width = _width - 160,
+                Height = 20
+            };
+
+            _search.TextChanged += (sender, args) => Fill();
+
+            Add(_search);
+
+            _list = new ScrollArea(10, HeaderHeight, _width - 20, _height - HeaderHeight - FooterHeight, true)
             {
                 AcceptMouseInput = true
             };
 
             Add(_list);
 
-            Add(new NiceButton(WinWidth - 200, WinHeight - 32, 90, 24, ButtonAction.Activate,
+            int bx = 10;
+            int by = _height - 32;
+
+            Add(new NiceButton(bx, by, 30, 24, ButtonAction.Activate, "-") { ButtonParameter = 4, IsSelectable = false });
+            Add(new NiceButton(bx + 34, by, 30, 24, ButtonAction.Activate, "+") { ButtonParameter = 5, IsSelectable = false });
+            Add(new NiceButton(bx + 72, by, 130, 24, ButtonAction.Activate,
+                ClassicUO.MobileUI.MobileUiController.T("equipment"))
+            {
+                ButtonParameter = 7,
+                IsSelectable = false
+            });
+            Add(new NiceButton(bx + 206, by, 120, 24, ButtonAction.Activate, SizeLabel())
+            {
+                ButtonParameter = 6,
+                IsSelectable = false
+            });
+
+            Add(new NiceButton(_width - 200, _height - 32, 90, 24, ButtonAction.Activate,
                 ClassicUO.MobileUI.MobileUiController.T("refresh"))
             {
                 ButtonParameter = 1,
                 IsSelectable = false
             });
 
-            Add(new NiceButton(WinWidth - 100, WinHeight - 32, 90, 24, ButtonAction.Activate,
+            Add(new NiceButton(_width - 100, _height - 32, 90, 24, ButtonAction.Activate,
                 ClassicUO.MobileUI.MobileUiController.T("close"))
             {
                 ButtonParameter = 0,
@@ -140,15 +200,51 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
+            string filter = _search != null ? (_search.Text ?? "").Trim() : "";
+
             int y = 0;
             int count = 0;
             double weight = 0.0;
+
+            if (_showEquipment && World.Player != null)
+            {
+                int equipped = 0;
+
+                foreach (Layer layer in EquipmentSlots)
+                {
+                    Item worn = World.Player.FindItemByLayer(layer);
+                    string text = layer + ": " + (worn != null ? GetDisplayName(worn) : "—");
+
+                    if (worn != null)
+                    {
+                        equipped++;
+                    }
+
+                    _list.Add(new Label(text, true, worn != null ? (ushort)0x0044 : (ushort)0x03B2,
+                        _width - 60, 255, FontStyle.BlackBorder)
+                    {
+                        X = 12,
+                        Y = y + 10
+                    });
+
+                    y += _rowHeight;
+                }
+
+                _summary.Text = ClassicUO.MobileUI.MobileUiController.T("equipment") + ": " + equipped + "/" + EquipmentSlots.Length;
+            }
 
             for (LinkedObject linked = container.Items; linked != null; linked = linked.Next)
             {
                 var item = (Item)linked;
 
                 if (item == null || item.IsDestroyed)
+                {
+                    continue;
+                }
+
+                string name = GetDisplayName(item);
+
+                if (filter.Length > 0 && (name == null || name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0))
                 {
                     continue;
                 }
@@ -165,7 +261,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 weight += itemWeight;
 
-                var row = new MobileItemRow(this, item, WinWidth - 44, RowHeight)
+                var row = new MobileItemRow(this, item, _width - 44, _rowHeight)
                 {
                     X = 0,
                     Y = y
@@ -173,28 +269,45 @@ namespace ClassicUO.Game.UI.Gumps
 
                 _list.Add(row);
 
-                y += RowHeight;
+                y += _rowHeight;
             }
 
-            _summary.Text = string.Format(
-                ClassicUO.MobileUI.MobileUiController.T("container_summary"),
-                count,
-                Math.Round(weight)
-            );
+            if (!_showEquipment)
+            {
+                _summary.Text = string.Format(
+                    ClassicUO.MobileUI.MobileUiController.T("container_summary"),
+                    count,
+                    Math.Round(weight)
+                );
+            }
 
-            if (count == 0)
+            if (count == 0 && !_showEquipment)
             {
                 _list.Add(new Label(
-                    ClassicUO.MobileUI.MobileUiController.T("container_empty"),
+                    filter.Length > 0
+                        ? ClassicUO.MobileUI.MobileUiController.T("container_not_found")
+                        : ClassicUO.MobileUI.MobileUiController.T("container_empty"),
                     true,
                     0x03B2,
-                    WinWidth - 60,
+                    _width - 60,
                     255,
                     FontStyle.BlackBorder)
                 {
                     X = 16,
                     Y = 8
                 });
+            }
+        }
+
+        private string SizeLabel()
+        {
+            var cfg = ClassicUO.MobileUI.MobileUiController.Config;
+
+            switch (cfg != null ? cfg.WindowPreset : 1)
+            {
+                case 0: return ClassicUO.MobileUI.MobileUiController.T("size_small");
+                case 2: return ClassicUO.MobileUI.MobileUiController.T("size_big");
+                default: return ClassicUO.MobileUI.MobileUiController.T("size_normal");
             }
         }
 
@@ -221,6 +334,30 @@ namespace ClassicUO.Game.UI.Gumps
             switch (buttonID)
             {
                 case 1:
+                    Fill();
+
+                    return;
+
+                case 4:
+                    ClassicUO.MobileUI.MobileUiController.ChangeRowHeight(-6);
+                    ClassicUO.MobileUI.MobileUiController.ReopenContainer(_containerSerial);
+
+                    return;
+
+                case 5:
+                    ClassicUO.MobileUI.MobileUiController.ChangeRowHeight(6);
+                    ClassicUO.MobileUI.MobileUiController.ReopenContainer(_containerSerial);
+
+                    return;
+
+                case 6:
+                    ClassicUO.MobileUI.MobileUiController.CycleWindowPreset();
+                    ClassicUO.MobileUI.MobileUiController.ReopenContainer(_containerSerial);
+
+                    return;
+
+                case 7:
+                    _showEquipment = !_showEquipment;
                     Fill();
 
                     return;
@@ -290,23 +427,25 @@ namespace ClassicUO.Game.UI.Gumps
                     weight *= item.Amount;
                 }
 
+                int textY = Math.Max(3, (height - 18) >> 1);
+
                 Add(new Label(name, true, 0xFFFF, width - 260, 255, FontStyle.BlackBorder)
                 {
                     X = 52,
-                    Y = 13
+                    Y = textY
                 });
 
                 Add(new Label(amountText, true, 0x0035, 70, 255, FontStyle.BlackBorder)
                 {
                     X = width - 190,
-                    Y = 13
+                    Y = textY
                 });
 
                 Add(new Label(Math.Round(weight) + " " + ClassicUO.MobileUI.MobileUiController.T("weight_short"),
                     true, 0x03B2, 110, 255, FontStyle.BlackBorder)
                 {
                     X = width - 105,
-                    Y = 13
+                    Y = textY
                 });
             }
 

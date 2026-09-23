@@ -99,6 +99,80 @@ namespace ClassicUO.MobileUI
             }
         }
 
+        /// <summary>Серийники надетых вещей игрока (для отметок «надето/снято»).</summary>
+        public static System.Collections.Generic.HashSet<uint> GetEquippedSerials()
+        {
+            var result = new System.Collections.Generic.HashSet<uint>();
+
+            var world = ClassicUO.Client.Game.UO.World;
+
+            if (world == null || world.Player == null)
+            {
+                return result;
+            }
+
+            for (var linked = world.Player.Items; linked != null; linked = linked.Next)
+            {
+                var item = linked as ClassicUO.Game.GameObjects.Item;
+
+                if (item != null && !item.IsDestroyed && item.Layer != ClassicUO.Game.Data.Layer.Invalid)
+                {
+                    result.Add(item.Serial);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>Переключить пресет размера окна (0/1/2) и сохранить.</summary>
+        public static void CycleWindowPreset()
+        {
+            Init();
+
+            Config.WindowPreset = (Config.WindowPreset + 1) % 3;
+            Config.Save();
+        }
+
+        public static void ChangeRowHeight(int delta)
+        {
+            Init();
+
+            int value = Config.RowHeight + delta;
+
+            if (value < 28)
+            {
+                value = 28;
+            }
+
+            if (value > 72)
+            {
+                value = 72;
+            }
+
+            Config.RowHeight = value;
+            Config.Save();
+        }
+
+        /// <summary>Переоткрыть экран контейнера — применяет новый размер окна и строк.</summary>
+        public static void ReopenContainer(uint serial)
+        {
+            var world = ClassicUO.Client.Game.UO.World;
+
+            if (world == null || world.Player == null)
+            {
+                return;
+            }
+
+            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.LocalSerial == serial);
+
+            if (existing != null)
+            {
+                existing.Dispose();
+            }
+
+            UIManager.Add(new MobileContainerGump(world, serial));
+        }
+
         /// <summary>Открыть экран рюкзака (мобильный список предметов).</summary>
         public static void OpenBackpack()
         {

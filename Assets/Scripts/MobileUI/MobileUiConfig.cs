@@ -28,9 +28,13 @@ namespace ClassicUO.MobileUI
         [JsonPropertyName("show_button")]
         public bool ShowButton { get; set; } = true;
 
-        /// <summary>Размер элементов списков в «пальцевых» единицах (для будущих экранов).</summary>
+        /// <summary>Высота строки списка в пикселях (размер предметов в меню).</summary>
         [JsonPropertyName("row_height")]
         public int RowHeight { get; set; } = 44;
+
+        /// <summary>Пресет размера окна: 0 — компактное, 1 — обычное, 2 — широкое.</summary>
+        [JsonPropertyName("window_preset")]
+        public int WindowPreset { get; set; } = 1;
 
         [JsonIgnore]
         public string FilePath { get; private set; } = "";
@@ -69,6 +73,7 @@ namespace ClassicUO.MobileUI
                         config.Enabled = loaded.Enabled;
                         config.ShowButton = loaded.ShowButton;
                         config.RowHeight = loaded.RowHeight > 0 ? loaded.RowHeight : 44;
+                        config.WindowPreset = loaded.WindowPreset < 0 || loaded.WindowPreset > 2 ? 1 : loaded.WindowPreset;
                         config.Language = MobileUiStrings.Normalize(loaded.Language);
                     }
                 }

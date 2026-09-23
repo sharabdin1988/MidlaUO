@@ -34,6 +34,14 @@ namespace ClassicUO.MobileUI
             ["open_backpack"]     = new[] { "Открыть сумку", "Open backpack" },
             ["refresh"]           = new[] { "Обновить", "Refresh" },
             ["weight_short"]      = new[] { "в.", "w" },
+            ["search"]            = new[] { "Поиск", "Search" },
+            ["equipped"]          = new[] { "надето", "worn" },
+            ["not_equipped"]      = new[] { "снято", "off" },
+            ["size_small"]        = new[] { "Размер: мелкий", "Size: small" },
+            ["size_normal"]       = new[] { "Размер: обычный", "Size: normal" },
+            ["size_big"]          = new[] { "Размер: крупный", "Size: big" },
+            ["equipment"]        = new[] { "Экипировка", "Equipment" },
+            ["container_not_found"] = new[] { "Ничего не найдено", "Nothing found" },
             ["screens_soon"]    = new[] { "Экраны: сумка, рунбук, крафт — в работе", "Screens: backpack, runebook, crafting — in progress" },
         };
 
