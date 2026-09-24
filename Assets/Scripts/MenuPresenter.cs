@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using ClassicUO.MobileUI;
 using DG.Tweening;
 using PreferenceEnums;
 using UnityEngine;
@@ -20,6 +21,8 @@ public class MenuPresenter : MonoBehaviour
     [SerializeField] private ClientRunner clientRunner;
 
     private readonly List<OptionEnumView> optionEnumViews = new List<OptionEnumView>();
+    private readonly List<Text> headerTexts = new List<Text>();
+    private readonly List<string> headerKeys = new List<string>();
     
     private bool menuOpened;
 
@@ -34,6 +37,7 @@ public class MenuPresenter : MonoBehaviour
         loginButtonGameObject.SetActive(false);
 
         AddHeader("MobileUO Menu");
+        GetOptionEnumViewInstance().Initialize(typeof(LanguageMode), UserPreferences.Language, "Language", false, false);
         GetOptionEnumViewInstance().Initialize(typeof(ShowCloseButtons), UserPreferences.ShowCloseButtons, "Close Buttons", false, false);
         GetOptionEnumViewInstance().Initialize(typeof(ShowModifierKeyButtons), UserPreferences.ShowModifierKeyButtons, "Show Modifier Key Buttons", false, false);
 //#if ENABLE_INTERNAL_ASSISTANT
@@ -72,12 +76,74 @@ public class MenuPresenter : MonoBehaviour
 
         showConsoleButtonGameObject.transform.SetAsLastSibling();
 
+        if (UserPreferences.Language != null)
+        {
+            UserPreferences.Language.ValueChanged += OnLanguageChanged;
+        }
+        UpdateButtonTexts();
+
         clientRunner.SceneChanged += OnUoSceneChanged;
 
         //Options that are hidden by default
         optionEnumViewInstance.gameObject.SetActive(false);
         headerTemplate.gameObject.SetActive(false);
-    }   
+    }
+
+    private void OnDestroy()
+    {
+        if (UserPreferences.Language != null)
+        {
+            UserPreferences.Language.ValueChanged -= OnLanguageChanged;
+        }
+    }
+
+    private void OnLanguageChanged(int val)
+    {
+        string langCode = val == (int)LanguageMode.Russian ? MobileUiStrings.Ru : MobileUiStrings.En;
+        if (MobileUiController.Config != null && MobileUiController.Language != langCode)
+        {
+            MobileUiController.Language = langCode;
+            MobileUiController.Config.Save();
+        }
+
+        for (int i = 0; i < headerTexts.Count; i++)
+        {
+            if (headerTexts[i] != null && i < headerKeys.Count)
+            {
+                headerTexts[i].text = MobileUiTranslation.Translate(headerKeys[i]);
+            }
+        }
+
+        UpdateButtonTexts();
+
+        foreach (var view in optionEnumViews)
+        {
+            if (view != null)
+            {
+                view.UpdateLanguage();
+            }
+        }
+    }
+
+    private void UpdateButtonTexts()
+    {
+        SetButtonText(customizeJoystickButtonGameObject, "Customize Joystick");
+        SetButtonText(loginButtonGameObject, "Login");
+        SetButtonText(quitButtonGameObject, "Quit");
+        SetButtonText(showConsoleButtonGameObject, "Show Console");
+    }
+
+    private void SetButtonText(GameObject go, string key)
+    {
+        if (go != null)
+        {
+            var txt = go.GetComponentInChildren<Text>();
+            if (txt != null)
+            {
+                txt.text = MobileUiTranslation.Translate(key);
+            }
+        }
+    }
 
     private void OnUoSceneChanged(bool isGameScene)
     {
@@ -96,9 +162,11 @@ public class MenuPresenter : MonoBehaviour
     private void AddHeader(string title)
     {
         var header = Instantiate(headerTemplate, optionEnumViewInstance.transform.parent);
-        header.text = title;
         header.gameObject.SetActive(true);
         header.transform.SetAsLastSibling();
+        headerTexts.Add(header);
+        headerKeys.Add(title);
+        header.text = MobileUiTranslation.Translate(title);
     }
 
     private void OnMenuButtonClicked()
@@ -109,6 +177,21 @@ public class MenuPresenter : MonoBehaviour
 
         if (menuOpened)
         {
+            UpdateButtonTexts();
+            for (int i = 0; i < headerTexts.Count; i++)
+            {
+                if (headerTexts[i] != null && i < headerKeys.Count)
+                {
+                    headerTexts[i].text = MobileUiTranslation.Translate(headerKeys[i]);
+                }
+            }
+            foreach (var view in optionEnumViews)
+            {
+                if (view != null)
+                {
+                    view.UpdateLanguage();
+                }
+            }
             listTransform.DOLocalMove(listOpenPosition, listTweenDuration);
         }
         else

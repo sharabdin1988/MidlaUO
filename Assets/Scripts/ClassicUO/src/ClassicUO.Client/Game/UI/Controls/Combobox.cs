@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Linq;
@@ -56,8 +56,10 @@ namespace ClassicUO.Game.UI.Controls
                 string.Compare(Settings.GlobalSettings.Language, "KOR", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                 string.Compare(Settings.GlobalSettings.Language, "JPN", StringComparison.InvariantCultureIgnoreCase) == 0;
 
-            bool unicode = isAsianLang;
-            byte font1 = (byte)(isAsianLang ? 1 : _font);
+            bool isRussian = ClassicUO.MobileUI.MobileUiTranslation.IsRussian;
+            bool hasCyrillic = items != null && items.Any(s => !string.IsNullOrEmpty(s) && s.Any(c => c > 127));
+            bool unicode = isAsianLang || isRussian || hasCyrillic;
+            byte font1 = (byte)(unicode ? (isAsianLang ? 1 : (byte)0xFF) : _font);
 
             Add
             (
@@ -200,8 +202,10 @@ namespace ClassicUO.Game.UI.Controls
                     string.Compare(Settings.GlobalSettings.Language, "KOR", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                     string.Compare(Settings.GlobalSettings.Language, "JPN", StringComparison.InvariantCultureIgnoreCase) == 0;
 
-                bool unicode = isAsianLang;
-                byte font1 = (byte)(isAsianLang ? 1 : font);
+                bool isRussian = ClassicUO.MobileUI.MobileUiTranslation.IsRussian;
+                bool hasCyrillic = items != null && items.Any(s => !string.IsNullOrEmpty(s) && s.Any(c => c > 127));
+                bool unicode = isAsianLang || isRussian || hasCyrillic;
+                byte font1 = (byte)(unicode ? (isAsianLang ? 1 : (byte)0xFF) : font);
 
                 for (int i = 0; i < items.Length; i++)
                 {

@@ -22,7 +22,17 @@ namespace ClassicUO.MobileUI
 
         public static bool Enabled => Config != null && Config.Enabled;
 
-        public static string Language => Config?.Language ?? MobileUiStrings.Ru;
+        public static string Language
+        {
+            get => Config?.Language ?? MobileUiStrings.Ru;
+            set
+            {
+                if (Config != null)
+                {
+                    Config.Language = MobileUiStrings.Normalize(value);
+                }
+            }
+        }
 
         public static bool Ready => Config != null;
 
@@ -39,6 +49,19 @@ namespace ClassicUO.MobileUI
             }
 
             Config = MobileUiConfig.Load();
+
+            if (UserPreferences.Language != null)
+            {
+                string prefLang = UserPreferences.Language.CurrentValue == (int)PreferenceEnums.LanguageMode.Russian
+                    ? MobileUiStrings.Ru
+                    : MobileUiStrings.En;
+                if (!string.Equals(Config.Language, prefLang, StringComparison.OrdinalIgnoreCase))
+                {
+                    Config.Language = prefLang;
+                    Config.Save();
+                }
+            }
+
             EnableReconnectAndAutoLogin();
             EnsureButton();
         }
@@ -120,6 +143,13 @@ namespace ClassicUO.MobileUI
 
             Config.Language = Config.Language == MobileUiStrings.Ru ? MobileUiStrings.En : MobileUiStrings.Ru;
             Config.Save();
+
+            if (UserPreferences.Language != null)
+            {
+                UserPreferences.Language.CurrentValue = Config.Language == MobileUiStrings.Ru
+                    ? (int)PreferenceEnums.LanguageMode.Russian
+                    : (int)PreferenceEnums.LanguageMode.English;
+            }
 
             Log.Info($"[MobileUI] язык интерфейса: {Config.Language}");
         }

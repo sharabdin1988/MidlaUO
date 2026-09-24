@@ -12,6 +12,7 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Assets;
+using ClassicUO.MobileUI;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
@@ -23,6 +24,8 @@ namespace ClassicUO.Game.UI.Gumps
 {
     internal class OptionsGump : Gump
     {
+        private static string Tr(string text) => MobileUiTranslation.Translate(text);
+
         private const byte FONT = 0xFF;
         private const ushort HUE_FONT = 0xFFFF;
         private const int WIDTH = 700;
@@ -181,7 +184,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.General
+                    Tr(ResGumps.General)
                 ) { IsSelected = true, ButtonParameter = 1 }
             );
 
@@ -194,7 +197,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Sound
+                    Tr(ResGumps.Sound)
                 ) { ButtonParameter = 2 }
             );
 
@@ -207,7 +210,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Video
+                    Tr(ResGumps.Video)
                 ) { ButtonParameter = 3 }
             );
 
@@ -220,7 +223,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Macros
+                    Tr(ResGumps.Macros)
                 ) { ButtonParameter = 4 }
             );
 
@@ -233,7 +236,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Tooltip
+                    Tr(ResGumps.Tooltip)
                 ) { ButtonParameter = 5 }
             );
 
@@ -246,7 +249,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Fonts
+                    Tr(ResGumps.Fonts)
                 ) { ButtonParameter = 6 }
             );
 
@@ -259,7 +262,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Speech
+                    Tr(ResGumps.Speech)
                 ) { ButtonParameter = 7 }
             );
 
@@ -272,7 +275,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.CombatSpells
+                    Tr(ResGumps.CombatSpells)
                 ) { ButtonParameter = 8 }
             );
 
@@ -285,7 +288,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Counters
+                    Tr(ResGumps.Counters)
                 ) { ButtonParameter = 9 }
             );
 
@@ -298,7 +301,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.InfoBar
+                    Tr(ResGumps.InfoBar)
                 ) { ButtonParameter = 10 }
             );
 
@@ -311,7 +314,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Containers
+                    Tr(ResGumps.Containers)
                 ) { ButtonParameter = 11 }
             );
 
@@ -324,7 +327,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.SwitchPage,
-                    ResGumps.Experimental
+                    Tr(ResGumps.Experimental)
                 ) { ButtonParameter = 12 }
             );
 
@@ -337,7 +340,7 @@ namespace ClassicUO.Game.UI.Gumps
                     140,
                     25,
                     ButtonAction.Activate,
-                    ResGumps.IgnoreListManager
+                    Tr(ResGumps.IgnoreListManager)
                 )
                 {
                     ButtonParameter = (int)Buttons.OpenIgnoreList
@@ -462,6 +465,36 @@ namespace ClassicUO.Game.UI.Gumps
 
             SettingsSection section = AddSettingsSection(box, "General");
 
+            section.Add(AddLabel(null, Tr("Interface Language:"), startX, startY));
+            Combobox langCombobox = AddCombobox
+            (
+                null,
+                new[] { "Русский", "English" },
+                MobileUiTranslation.IsRussian ? 0 : 1,
+                startX,
+                startY,
+                160
+            );
+            langCombobox.OnOptionSelected += (sender, selectedIdx) =>
+            {
+                string targetLang = selectedIdx == 0 ? MobileUiStrings.Ru : MobileUiStrings.En;
+                if (!string.Equals(MobileUiController.Language, targetLang, StringComparison.OrdinalIgnoreCase))
+                {
+                    if (UserPreferences.Language != null)
+                    {
+                        UserPreferences.Language.CurrentValue = selectedIdx == 0
+                            ? (int)PreferenceEnums.LanguageMode.Russian
+                            : (int)PreferenceEnums.LanguageMode.English;
+                    }
+                    else
+                    {
+                        MobileUiController.Language = targetLang;
+                    }
+                    Dispose();
+                    UIManager.Add(new OptionsGump(World));
+                }
+            };
+            section.Add(langCombobox);
 
             section.Add
             (
@@ -1260,10 +1293,10 @@ namespace ClassicUO.Game.UI.Gumps
                 )
             );
 
-            section4.Add(new Label(ResGumps.DragSelectStartingPosX, true, HUE_FONT));
+            section4.Add(new Label(Tr(ResGumps.DragSelectStartingPosX), true, HUE_FONT));
             section4.Add(_dragSelectStartX = new HSliderBar(startX, startY, 200, 0, Client.Game.Scene.Camera.Bounds.Width, _currentProfile.DragSelectStartX, HSliderBarStyle.MetalWidgetRecessedBar, true, 0, HUE_FONT));
 
-            section4.Add(new Label(ResGumps.DragSelectStartingPosY, true, HUE_FONT));
+            section4.Add(new Label(Tr(ResGumps.DragSelectStartingPosY), true, HUE_FONT));
             section4.Add(_dragSelectStartY = new HSliderBar(startX, startY, 200, 0, Client.Game.Scene.Camera.Bounds.Height, _currentProfile.DragSelectStartY, HSliderBarStyle.MetalWidgetRecessedBar, true, 0, HUE_FONT));
             section4.Add
             (
@@ -1980,7 +2013,7 @@ namespace ClassicUO.Game.UI.Gumps
                 130,
                 20,
                 ButtonAction.Activate,
-                ResGumps.NewMacro
+                Tr(ResGumps.NewMacro)
             ) { IsSelectable = false, ButtonParameter = (int) Buttons.NewMacro };
 
             Add(addButton, PAGE);
@@ -1992,7 +2025,7 @@ namespace ClassicUO.Game.UI.Gumps
                 130,
                 20,
                 ButtonAction.Activate,
-                ResGumps.DeleteMacro
+                Tr(ResGumps.DeleteMacro)
             ) { IsSelectable = false, ButtonParameter = (int) Buttons.DeleteMacro };
 
             Add(delButton, PAGE);
@@ -2013,7 +2046,7 @@ namespace ClassicUO.Game.UI.Gumps
                     World,
                     250,
                     150,
-                    ResGumps.MacroName,
+                    Tr(ResGumps.MacroName),
                     name =>
                     {
                         if (string.IsNullOrWhiteSpace(name))
@@ -2112,7 +2145,7 @@ namespace ClassicUO.Game.UI.Gumps
                     QuestionGump dialog = new QuestionGump
                     (
                         World,
-                        ResGumps.MacroDeleteConfirmation,
+                        Tr(ResGumps.MacroDeleteConfirmation),
                         b =>
                         {
                             if (!b)
@@ -4441,7 +4474,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private Label AddLabel(ScrollArea area, string text, int x, int y)
         {
-            Label label = new Label(text, true, HUE_FONT)
+            Label label = new Label(Tr(text), true, HUE_FONT)
             {
                 X = x,
                 Y = y
@@ -4458,7 +4491,7 @@ namespace ClassicUO.Game.UI.Gumps
             (
                 0x00D2,
                 0x00D3,
-                text,
+                Tr(text),
                 FONT,
                 HUE_FONT
             )
@@ -4483,6 +4516,16 @@ namespace ClassicUO.Game.UI.Gumps
             int width
         )
         {
+            if (values != null && MobileUiTranslation.IsRussian)
+            {
+                string[] trValues = new string[values.Length];
+                for (int i = 0; i < values.Length; i++)
+                {
+                    trValues[i] = Tr(values[i]);
+                }
+                values = trValues;
+            }
+
             Combobox combobox = new Combobox(x, y, width, values)
             {
                 SelectedIndex = currentIndex
@@ -4539,7 +4582,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             area?.Add
             (
-                new Label(text, true, HUE_FONT)
+                new Label(Tr(text), true, HUE_FONT)
                 {
                     X = x + box.Width + 10,
                     Y = y
@@ -4551,7 +4594,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         private SettingsSection AddSettingsSection(DataBox area, string label)
         {
-            SettingsSection section = new SettingsSection(label, area.Width);
+            SettingsSection section = new SettingsSection(Tr(label), area.Width);
             area.Add(section);
             area.WantUpdateSize = true;
             //area.ReArrangeChildren();

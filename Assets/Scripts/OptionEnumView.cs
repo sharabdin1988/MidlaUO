@@ -1,4 +1,5 @@
 using ClassicUO;
+using ClassicUO.MobileUI;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,6 +16,8 @@ public class OptionEnumView : MonoBehaviour
     
     private UserPreferences.IntPreference intPreference;
     
+    private string originalLabelText;
+    private Type enumType;
     private string[] enumNames;
     private List<int> enumValues;
     private bool useValuesInsteadOfNames;
@@ -22,20 +25,58 @@ public class OptionEnumView : MonoBehaviour
 
     public void Initialize(Type enumType, UserPreferences.IntPreference intPreference, string labelText, bool useValuesInsteadOfNames, bool usePercentage)
     {
+        this.enumType = enumType;
         this.intPreference = intPreference;
+        this.originalLabelText = labelText;
         this.useValuesInsteadOfNames = useValuesInsteadOfNames;
         this.usePercentage = usePercentage;
-        this.labelText.text = labelText;
 
         intPreference.ValueChanged += OnValueChanged;
+        if (UserPreferences.Language != null)
+        {
+            UserPreferences.Language.ValueChanged += OnLanguageChanged;
+        }
 
         enumNames = Enum.GetNames(enumType);
         enumValues = Enum.GetValues(enumType).Cast<int>().ToList();
 
+        UpdateLabel();
         UpdateText();
 
         leftButton.onClick.AddListener(OnLeftButtonClicked);
         rightButton.onClick.AddListener(OnRightButtonClicked);
+    }
+
+    private void OnDestroy()
+    {
+        if (intPreference != null)
+        {
+            intPreference.ValueChanged -= OnValueChanged;
+        }
+        if (UserPreferences.Language != null)
+        {
+            UserPreferences.Language.ValueChanged -= OnLanguageChanged;
+        }
+    }
+
+    private void OnLanguageChanged(int lang)
+    {
+        UpdateLabel();
+        UpdateText();
+    }
+
+    public void UpdateLanguage()
+    {
+        UpdateLabel();
+        UpdateText();
+    }
+
+    private void UpdateLabel()
+    {
+        if (labelText != null)
+        {
+            labelText.text = MobileUiTranslation.Translate(originalLabelText);
+        }
     }
 
     private void OnValueChanged(int value)
@@ -83,7 +124,8 @@ public class OptionEnumView : MonoBehaviour
             var index = enumValues.IndexOf(intPreference.CurrentValue);
             if (index > -1)
             {
-                text = enumNames[index].Replace("_", "");
+                string raw = enumNames[index].Replace("_", "");
+                text = MobileUiTranslation.TranslateEnumValue(enumType, raw);
             }
             else
             {
