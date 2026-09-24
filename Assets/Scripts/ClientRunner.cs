@@ -413,6 +413,10 @@ public class ClientRunner : MonoBehaviour
 	    //ProfileManager.Current.HoldShiftToSplitStack = Application.isMobilePlatform;
 	    //Scale items inside containers by default on mobile (won't have any effect if container scale isn't changed)
 	    ProfileManager.CurrentProfile.ScaleItemsInsideContainers = Application.isMobilePlatform;
+	    if (Application.isMobilePlatform && ProfileManager.CurrentProfile.ContainersScale <= 100)
+	    {
+		    ProfileManager.CurrentProfile.ContainersScale = 160;
+	    }
 	    OnForceUseXbrChanged(UserPreferences.ForceUseXbr.CurrentValue);
     }
 

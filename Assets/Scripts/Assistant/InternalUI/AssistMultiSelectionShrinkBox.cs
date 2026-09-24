@@ -37,6 +37,7 @@ namespace ClassicUO.Game.UI.Controls
         private readonly bool _useArrow2;
         private string[] _items;
         private bool _opened;
+        private Button[] _pics;
         private int _selectedIndex;
         private readonly string _rawIndexText;
 

@@ -75,7 +75,21 @@ namespace ClassicUO.MobileUI
 
         public uint BookSerial => _bookSerial;
 
-        private SpellbookGump Source => UIManager.Gumps.OfType<SpellbookGump>().FirstOrDefault(g => g.LocalSerial == _bookSerial);
+        private SpellbookGump Source
+        {
+            get
+            {
+                for (LinkedListNode<Gump> node = UIManager.Gumps.First; node != null; node = node.Next)
+                {
+                    if (node.Value is SpellbookGump sg && sg.LocalSerial == _bookSerial && !sg.IsDisposed)
+                    {
+                        return sg;
+                    }
+                }
+
+                return null;
+            }
+        }
 
         private void Build()
         {
@@ -411,15 +425,26 @@ namespace ClassicUO.MobileUI
             var def = book.MobileGetSpellDefinition(index);
             if (def == null) return;
 
-            // Проверяем, есть ли уже такая кнопка
-            var existing = UIManager.Gumps.OfType<UseSpellButtonGump>().FirstOrDefault(g => g.SpellID == def.ID);
+            UseSpellButtonGump existing = null;
+            int count = 0;
+            for (LinkedListNode<Gump> node = UIManager.Gumps.First; node != null; node = node.Next)
+            {
+                if (node.Value is UseSpellButtonGump btn)
+                {
+                    count++;
+                    if (btn.SpellID == def.ID)
+                    {
+                        existing = btn;
+                    }
+                }
+            }
+
             if (existing != null)
             {
                 existing.BringOnTop();
                 return;
             }
 
-            int count = UIManager.Gumps.OfType<UseSpellButtonGump>().Count();
             int screenX = 120 + (count % 4) * 50;
             int screenY = 120 + (count / 4) * 50;
 
@@ -436,12 +461,18 @@ namespace ClassicUO.MobileUI
         {
             base.Update();
 
+            var book = Source;
+            if (book == null || book.IsDisposed)
+            {
+                Dispose();
+                return;
+            }
+
             if ((DateTime.UtcNow - _lastRefresh).TotalSeconds >= 1.0)
             {
                 _lastRefresh = DateTime.UtcNow;
 
-                var book = Source;
-                if (book != null && _list.Children.Count <= 1)
+                if (_list.Children.Count <= 1)
                 {
                     Fill();
                 }

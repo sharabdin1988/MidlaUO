@@ -6529,8 +6529,15 @@ namespace ClassicUO.Network
         {
             if (ClassicUO.MobileUI.MobileUiController.Enabled && ClassicUO.MobileUI.MobileRunebookGump.IsRunebook(layout, lines))
             {
-                var old = UIManager.Gumps.OfType<ClassicUO.MobileUI.MobileRunebookGump>().FirstOrDefault(g => g.LocalSerial == sender);
-                old?.Dispose();
+                for (LinkedListNode<Gump> node = UIManager.Gumps.First; node != null; node = node.Next)
+                {
+                    Control g = node.Value;
+                    if (!g.IsDisposed && g.LocalSerial == sender && g is ClassicUO.MobileUI.MobileRunebookGump)
+                    {
+                        g.Dispose();
+                        break;
+                    }
+                }
 
                 var runebookGump = new ClassicUO.MobileUI.MobileRunebookGump(world, sender, gumpID, layout, lines);
                 UIManager.Add(runebookGump);
