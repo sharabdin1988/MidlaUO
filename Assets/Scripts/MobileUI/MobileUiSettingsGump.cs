@@ -12,8 +12,8 @@ namespace ClassicUO.Game.UI.Gumps
 {
     internal class MobileUiSettingsGump : Gump
     {
-        private const int Width_ = 420;
-        private const int Height_ = 210;
+        private const int Width_ = 450;
+        private const int Height_ = 250;
 
         public MobileUiSettingsGump(World world) : base(world, 0, 0)
         {
@@ -69,13 +69,13 @@ namespace ClassicUO.Game.UI.Gumps
                 FontStyle.BlackBorder)
             {
                 X = 24,
-                Y = 52
+                Y = 48
             });
 
             Add(new Button(1, 0x0481, 0x0482, 0x0483)
             {
                 X = 24,
-                Y = 74,
+                Y = 70,
                 ButtonAction = ButtonAction.Activate
             });
 
@@ -88,7 +88,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontStyle.BlackBorder)
             {
                 X = 66,
-                Y = 80
+                Y = 76
             });
 
             // --- переключатель языка ---
@@ -102,32 +102,13 @@ namespace ClassicUO.Game.UI.Gumps
                 FontStyle.BlackBorder)
             {
                 X = 24,
-                Y = 116
-            });
-
-            Add(new Button(3, 0x0481, 0x0482, 0x0483)
-            {
-                X = 24,
-                Y = 162,
-                ButtonAction = ButtonAction.Activate
-            });
-
-            Add(new Label(
-                ClassicUO.MobileUI.MobileUiController.T("open_backpack"),
-                true,
-                0x0035,
-                Width_ - 40,
-                255,
-                FontStyle.BlackBorder)
-            {
-                X = 66,
-                Y = 168
+                Y = 104
             });
 
             Add(new Button(2, 0x0481, 0x0482, 0x0483)
             {
                 X = 24,
-                Y = 138,
+                Y = 126,
                 ButtonAction = ButtonAction.Activate
             });
 
@@ -140,26 +121,39 @@ namespace ClassicUO.Game.UI.Gumps
                 FontStyle.BlackBorder)
             {
                 X = 66,
-                Y = 144
+                Y = 132
             });
 
+            // --- подсказки по книгам и сумкам ---
             Add(new Label(
-                ClassicUO.MobileUI.MobileUiController.T("screens_soon"),
+                "• " + ClassicUO.MobileUI.MobileUiController.T("books_hint"),
                 true,
                 0x0035,
-                Width_ - 40,
+                Width_ - 48,
                 255,
                 FontStyle.BlackBorder)
             {
                 X = 24,
-                Y = 178
+                Y = 162
+            });
+
+            Add(new Label(
+                "• " + ClassicUO.MobileUI.MobileUiController.T("backpack_hint"),
+                true,
+                0x03B2,
+                Width_ - 48,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 24,
+                Y = 184
             });
 
             // --- закрыть ---
             Add(new Button(0, 0x0481, 0x0482, 0x0483)
             {
-                X = Width_ - 140,
-                Y = Height_ - 40,
+                X = Width_ - 130,
+                Y = Height_ - 38,
                 ButtonAction = ButtonAction.Activate
             });
 
@@ -171,8 +165,8 @@ namespace ClassicUO.Game.UI.Gumps
                 255,
                 FontStyle.BlackBorder)
             {
-                X = Width_ - 118,
-                Y = Height_ - 34
+                X = Width_ - 108,
+                Y = Height_ - 32
             });
 
             X = 60;

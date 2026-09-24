@@ -1526,28 +1526,14 @@ namespace ClassicUO.Network
                         playsound = true;
                     }
 
-                    if (ClassicUO.MobileUI.MobileUiController.Enabled)
-                    {
-                        // MidlaUO: мобильный список предметов вместо мелкой штатной сумки
-                        UIManager.Add(
-                            new MobileContainerGump(world, item.Serial)
-                            {
-                                X = x,
-                                Y = y
-                            }
-                        );
-                    }
-                    else
-                    {
-                        UIManager.Add(
-                            new ContainerGump(world, item, graphic, playsound)
-                            {
-                                X = x,
-                                Y = y,
-                                InvalidateContents = true
-                            }
-                        );
-                    }
+                    UIManager.Add(
+                        new ContainerGump(world, item, graphic, playsound)
+                        {
+                            X = x,
+                            Y = y,
+                            InvalidateContents = true
+                        }
+                    );
 
                     UIManager.RemovePosition(serial);
                 }
@@ -6541,6 +6527,16 @@ namespace ClassicUO.Network
             string[] lines
         )
         {
+            if (ClassicUO.MobileUI.MobileUiController.Enabled && ClassicUO.MobileUI.MobileRunebookGump.IsRunebook(layout, lines))
+            {
+                var old = UIManager.Gumps.OfType<ClassicUO.MobileUI.MobileRunebookGump>().FirstOrDefault(g => g.LocalSerial == sender);
+                old?.Dispose();
+
+                var runebookGump = new ClassicUO.MobileUI.MobileRunebookGump(world, sender, gumpID, layout, lines);
+                UIManager.Add(runebookGump);
+                return runebookGump;
+            }
+
             List<string> cmdlist = _parser.GetTokens(layout);
             int cmdlen = cmdlist.Count;
 

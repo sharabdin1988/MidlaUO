@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Collections.Generic;
@@ -55,6 +55,12 @@ namespace ClassicUO.Game.UI.Controls
             }
 
             Width = gumpInfoInactive.UV.Width;
+
+            text = ClassicUO.MobileUI.MobileUiTranslation.Translate(text);
+            if (!isunicode && ClassicUO.MobileUI.MobileUiTranslation.IsRussian)
+            {
+                isunicode = true;
+            }
 
             _text = RenderedText.Create(text, color, font, isunicode, maxWidth: maxWidth);
 

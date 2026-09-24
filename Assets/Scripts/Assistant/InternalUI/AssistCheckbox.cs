@@ -1,4 +1,4 @@
-﻿#region license
+#region license
 // Copyright (C) 2022-2025 Sascha Puligheddu
 // 
 // This project is a complete reproduction of AssistUO for MobileUO and ClassicUO.
@@ -48,6 +48,12 @@ namespace ClassicUO.Game.UI.Controls
             }
             Width = gumpInfoInactive.UV.Width;
 
+            text = ClassicUO.MobileUI.MobileUiTranslation.Translate(text);
+            if (!isunicode && ClassicUO.MobileUI.MobileUiTranslation.IsRussian)
+            {
+                isunicode = true;
+            }
+
             _text = RenderedText.Create(text, color, font, isunicode, maxWidth: maxWidth);
 
             Width += _text.Width;
@@ -75,10 +81,14 @@ namespace ClassicUO.Game.UI.Controls
             get => _text.Text;
             set
             {
-                if (!string.IsNullOrEmpty(value) && _text.Text != value)
+                if (!string.IsNullOrEmpty(value))
                 {
-                    _text.Text = value;
-                    _text.CreateTexture();
+                    string translated = ClassicUO.MobileUI.MobileUiTranslation.Translate(value);
+                    if (_text.Text != translated)
+                    {
+                        _text.Text = translated;
+                        _text.CreateTexture();
+                    }
                 }
             }
         }

@@ -1,4 +1,4 @@
-﻿#region license
+#region license
 // Copyright (C) 2022-2025 Sascha Puligheddu
 // 
 // This project is a complete reproduction of AssistUO for MobileUO and ClassicUO.
@@ -37,8 +37,8 @@ namespace ClassicUO.Game.UI.Controls
         private readonly bool _useArrow2;
         private string[] _items;
         private bool _opened;
-        private Button[] _pics;
         private int _selectedIndex;
+        private readonly string _rawIndexText;
 
         public AssistMultiSelectionShrinkbox(int x, int y, int width, string indextext, string[] items, ushort hue = 0x0453, bool unicode = false, byte font = 9, int group = 0, ushort button = 0, ushort pressedbutton = 0, bool useArrow2 = false) : this(x, y, width, indextext, hue, unicode, font, group, button, pressedbutton, useArrow2)
         {
@@ -60,9 +60,9 @@ namespace ClassicUO.Game.UI.Controls
             }
             _buttongroup = group;
             Width = width;
-            _useArrow2 = userArrow2;
-
-            Add(_label = new Label(indextext, unicode, hue, font: font, align: TEXT_ALIGN_TYPE.TS_LEFT)
+            _rawIndexText = indextext;
+            bool isUni = unicode || ClassicUO.MobileUI.MobileUiTranslation.IsRussian;
+            Add(_label = new Label(ClassicUO.MobileUI.MobileUiTranslation.Translate(indextext), isUni, hue, font: font, align: TEXT_ALIGN_TYPE.TS_LEFT)
             {
                 X = 18
             });
@@ -131,7 +131,7 @@ namespace ClassicUO.Game.UI.Controls
 
         internal uint GetItemsLength => (uint)_items.Length;
 
-        public string Name => _label == null ? null : _label.Text;
+        public string Name => _rawIndexText ?? (_label == null ? null : _label.Text);
 
         public AssistMultiSelectionShrinkbox ParentBox { get; private set; }
 
@@ -195,18 +195,19 @@ namespace ClassicUO.Game.UI.Controls
             foreach (string item in _items)
             {
                 int w, h;
+                string displayText = ClassicUO.MobileUI.MobileUiTranslation.Translate(item);
 
-                if (_label.Unicode)
-                    w = Client.Game.UO.FileManager.Fonts.GetWidthUnicode(_label.Font, item);
+                if (_label.Unicode || ClassicUO.MobileUI.MobileUiTranslation.IsRussian)
+                    w = Client.Game.UO.FileManager.Fonts.GetWidthUnicode(_label.Font, displayText);
                 else
-                    w = Client.Game.UO.FileManager.Fonts.GetWidthASCII(_label.Font, item);
+                    w = Client.Game.UO.FileManager.Fonts.GetWidthASCII(_label.Font, displayText);
 
                 if (w > width)
                 {
-                    if (_label.Unicode)
-                        h = Client.Game.UO.FileManager.Fonts.GetHeightUnicode(_label.Font, item, w, TEXT_ALIGN_TYPE.TS_LEFT, 0x0);
+                    if (_label.Unicode || ClassicUO.MobileUI.MobileUiTranslation.IsRussian)
+                        h = Client.Game.UO.FileManager.Fonts.GetHeightUnicode(_label.Font, displayText, w, TEXT_ALIGN_TYPE.TS_LEFT, 0x0);
                     else
-                        h = Client.Game.UO.FileManager.Fonts.GetHeightASCII(_label.Font, item, w, TEXT_ALIGN_TYPE.TS_LEFT, 0x0);
+                        h = Client.Game.UO.FileManager.Fonts.GetHeightASCII(_label.Font, displayText, w, TEXT_ALIGN_TYPE.TS_LEFT, 0x0);
                     width = w;
                     height = h + 2;
                 }

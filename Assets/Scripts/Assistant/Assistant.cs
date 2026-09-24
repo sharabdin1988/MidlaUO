@@ -1,4 +1,4 @@
-﻿#region license
+#region license
 // Copyright (C) 2022-2025 Sascha Puligheddu
 // 
 // This project is a complete reproduction of AssistUO for MobileUO and ClassicUO.
@@ -31,6 +31,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using ClassicUO.Input;
+using ClassicUO.MobileUI;
 
 namespace ClassicUO.Game.UI.Gumps
 {
@@ -117,14 +118,14 @@ namespace ClassicUO.Game.UI.Gumps
                 Line.CreateRectangleArea(this, 10, 10, w - 20, h - 20, 0, Color.Gray.PackedValue, 2, "Object Inspector");
                 int x = 20, y = 20, mw = 110, mh;
                 Label l;
-                Add(l = new Label("Serial:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                Add(l = new Label(MobileUiTranslation.Translate("Serial:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                 mh = l.Height;
                 Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"0x{inspected.Serial:X8}" });
                 y += mh + 2;
-                Add(new Label("Graphic:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                Add(new Label(MobileUiTranslation.Translate("Graphic:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                 Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"0x{inspected.Graphic:X4}" });
                 y += mh + 2;
-                Add(new Label("Color:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                Add(new Label(MobileUiTranslation.Translate("Color:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                 Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{inspected.Hue}" });
                 if (inspected.Hue > 0 && inspected.Hue <= Client.Game.UO.FileManager.Hues.HuesCount)
                 {
@@ -133,75 +134,75 @@ namespace ClassicUO.Game.UI.Gumps
                         Add(new ColorBox(3, 14, inspected.Hue/*, HuesLoader.Instance.GetPolygoneColor(i, inspected.Hue)*/) { X = 190 + (3 * i), Y = y + 3 });
                 }
                 y += mh + 2;
-                Add(new Label("Position (X Y Z):", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                Add(new Label(MobileUiTranslation.Translate("Position (X Y Z):"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                 Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{inspected.Position.X} {inspected.Position.Y} {inspected.Position.Z}" });
                 y += mh + 5;
                 if (inspected is UOMobile mob)
                 {
-                    Add(new Label("Mobile", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Mobile"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     y += mh;
-                    Add(new Label("Name:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Name:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{mob.Name}" });
                     y += mh + 2;
-                    Add(new Label("Sex:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Female ? "Female" : "Male")}" });
+                    Add(new Label(MobileUiTranslation.Translate("Sex:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Female ? MobileUiTranslation.Translate("Female") : MobileUiTranslation.Translate("Male"))}" });
                     y += mh + 2;
-                    Add(new Label("Hits:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Hits:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{mob.Hits}{(mob.InParty ? "%" : "")}" });
                     y += mh + 2;
-                    Add(new Label("Max Hits:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Max Hits:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{mob.HitsMax}{(mob.InParty ? "%" : "")}" });
                     y += mh + 2;
-                    Add(new Label("Notoriety:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Notoriety:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{mob.Notoriety} - {(NotorietyFlag)mob.Notoriety}" });
                     y += mh + 2;
-                    Add(new Label("Direction:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Direction:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(int)(mob.Direction & Direction.Up)} - {(mob.Direction & Direction.Up).ToString().ToLower(XmlFileParser.Culture)}" });
                     y += mh + 5;
-                    Add(new Label("Flags", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Flags"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"0x{mob.GetPacketFlags():X2}" });
                     y += mh;
-                    Add(new Label("Paralyzed:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Paralyzed ? "Yes" : "No")}" });
+                    Add(new Label(MobileUiTranslation.Translate("Paralyzed:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Paralyzed ? MobileUiTranslation.Translate("Yes") : MobileUiTranslation.Translate("No"))}" });
                     y += mh + 2;
-                    Add(new Label("Poisoned:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Poisoned ? "Yes" : "No")}" });
+                    Add(new Label(MobileUiTranslation.Translate("Poisoned:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Poisoned ? MobileUiTranslation.Translate("Yes") : MobileUiTranslation.Translate("No"))}" });
                     y += mh + 2;
-                    Add(new Label("Invulnerable:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Blessed ? "Yes" : "No")}" });
+                    Add(new Label(MobileUiTranslation.Translate("Invulnerable:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Blessed ? MobileUiTranslation.Translate("Yes") : MobileUiTranslation.Translate("No"))}" });
                     y += mh + 2;
-                    Add(new Label("War Mode:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Warmode ? "Yes" : "No")}" });
+                    Add(new Label(MobileUiTranslation.Translate("War Mode:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Warmode ? MobileUiTranslation.Translate("Yes") : MobileUiTranslation.Translate("No"))}" });
                     y += mh + 2;
-                    Add(new Label("Hidden:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Visible ? "No" : "Yes")}" });
+                    Add(new Label(MobileUiTranslation.Translate("Hidden:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Visible ? MobileUiTranslation.Translate("No") : MobileUiTranslation.Translate("Yes"))}" });
                     y += mh + 2;
-                    Add(new Label("Flying:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Flying ? "Yes" : "No")}" });
+                    Add(new Label(MobileUiTranslation.Translate("Flying:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(mob.Flying ? MobileUiTranslation.Translate("Yes") : MobileUiTranslation.Translate("No"))}" });
                 }
                 else if (inspected is UOItem it)
                 {
-                    Add(new Label("Item", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Item"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     y += mh;
-                    Add(new Label("Name:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Name:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{it.Name}" });
                     y += mh + 2;
-                    Add(new Label("Container:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Container:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     uint cnt = it.GetContainerSerial();
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(!SerialHelper.IsValid(cnt) ? "ground" : $"0x{cnt:X8}")}" });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(!SerialHelper.IsValid(cnt) ? MobileUiTranslation.Translate("ground") : $"0x{cnt:X8}")}" });
                     y += mh + 2;
-                    Add(new Label("Root Container:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Root Container:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     cnt = it.GetRootContainerSerial();
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(!SerialHelper.IsValid(cnt) ? "ground" : $"0x{cnt:X8}")}" });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(!SerialHelper.IsValid(cnt) ? MobileUiTranslation.Translate("ground") : $"0x{cnt:X8}")}" });
                     y += mh + 2;
-                    Add(new Label("Amount:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Amount:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{it.Amount}" });
                     y += mh + 2;
-                    Add(new Label("Layer:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new Label(MobileUiTranslation.Translate("Layer:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
                     Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(byte)it.Layer}" });
                     y += mh + 2;
-                    Add(new Label("Owned:", true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
-                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(UOSObjects.Player.Serial == cnt ? "Yes" : "No")}" });
+                    Add(new Label(MobileUiTranslation.Translate("Owned:"), true, ScriptTextBox.GRAY_HUE, mw) { X = x, Y = y });
+                    Add(new SelectableReadOnlyBox(FONT, -1, 0, true, FontStyle.None, ScriptTextBox.GREEN_HUE) { X = x + mw, Y = y, Width = w - (40 + mw), Text = $"{(UOSObjects.Player.Serial == cnt ? MobileUiTranslation.Translate("Yes") : MobileUiTranslation.Translate("No"))}" });
                 }
             }
         }
@@ -226,8 +227,8 @@ namespace ClassicUO.Game.UI.Gumps
                     Height = 120;
                     Add(new AlphaBlendControl(1.0f) { X = 1, Y = 1, Width = 318, Height = 118 });
                     Line.CreateRectangleArea(this, 10, 10, 300, 100, 0, Color.Gray.PackedValue, 2, "Warning!");
-                    Add(new Label($"Changing to {(control.IsChecked ? "UOAssist" : "Razor")}!", true, ScriptTextBox.GRAY_HUE, 280, FONT, FontStyle.None, TEXT_ALIGN_TYPE.TS_CENTER) { X = 20, Y = 30 });
-                    Add(new Label("Click on OKAY to close ClassicUO!", true, ScriptTextBox.GRAY_HUE, 280, FONT, FontStyle.None, TEXT_ALIGN_TYPE.TS_CENTER) { X = 20, Y = 50 });
+                    Add(new Label(string.Format(MobileUiTranslation.Translate(control.IsChecked ? "Changing to UOAssist!" : "Changing to Razor!")), true, ScriptTextBox.GRAY_HUE, 280, FONT, FontStyle.None, TEXT_ALIGN_TYPE.TS_CENTER) { X = 20, Y = 30 });
+                    Add(new Label(MobileUiTranslation.Translate("Click on OKAY to close ClassicUO!"), true, ScriptTextBox.GRAY_HUE, 280, FONT, FontStyle.None, TEXT_ALIGN_TYPE.TS_CENTER) { X = 20, Y = 50 });
                     Add(new NiceButton(40, 80, 80, 30, ButtonAction.Activate, "OKAY") { ButtonParameter = 123, IsSelectable = false });
                     Add(new NiceButton(180, 80, 80, 30, ButtonAction.Activate, "CANCEL") { ButtonParameter = 321, IsSelectable = false });
                     IsModal = true;
@@ -497,7 +498,7 @@ namespace ClassicUO.Game.UI.Gumps
                     Add(new AlphaBlendControl(1.0f) { X = 1, Y = 1, Width = 318, Height = 118 });
                     Line.CreateRectangleArea(this, 10, 10, 300, 100, 0, Color.Gray.PackedValue, 2, "Warning!");
                     Add(new Label($"Existant HotKey ({split[split.Length - 1]})!", true, ScriptTextBox.GRAY_HUE, 280, FONT, FontStyle.None, TEXT_ALIGN_TYPE.TS_CENTER){ X = 20, Y = 30 });
-                    Add(new Label("Click on OKAY to overwrite it!", true, ScriptTextBox.GRAY_HUE, 280, FONT, FontStyle.None, TEXT_ALIGN_TYPE.TS_CENTER) { X = 20, Y = 50 });
+                    Add(new Label(MobileUiTranslation.Translate("Click on OKAY to overwrite it!"), true, ScriptTextBox.GRAY_HUE, 280, FONT, FontStyle.None, TEXT_ALIGN_TYPE.TS_CENTER) { X = 20, Y = 50 });
                     Add(new NiceButton(40, 80, 80, 30, ButtonAction.Activate, "OKAY") { ButtonParameter = 123, IsSelectable = false });
                     Add(new NiceButton(180, 80, 80, 30, ButtonAction.Activate, "CANCEL") { ButtonParameter = 321, IsSelectable = false });
                     IsModal = true;
@@ -800,7 +801,7 @@ namespace ClassicUO.Game.UI.Gumps
             //Minimized status
             Add(_alphaMinimizedBlend, (int)PageType.Minimized);
             Add(_prevbutton, (int)PageType.Minimized);
-            Add(new Label("Assistant", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = 26, Y = 5 }, (int)PageType.Minimized);
+            Add(new Label(MobileUiTranslation.Translate("Assistant"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = 26, Y = 5 }, (int)PageType.Minimized);
 
             BuildGeneral((int)PageType.General);
             BuildOptions();
@@ -808,6 +809,11 @@ namespace ClassicUO.Game.UI.Gumps
             BuildMacros((int)PageType.Macros);
             //BuildSkills((int)PageType.Skills);//is this page really needed?
             BuildAgents();
+
+            if (UserPreferences.Language != null)
+            {
+                UserPreferences.Language.ValueChanged += OnLanguagePreferenceChanged;
+            }
             
             var isMinimized = UserPreferences.AssistantMinimized.CurrentValue == (int) PreferenceEnums.AssistantMinimized.On;
             //NOTE: It seems to be necessary to switch to 1st page first before setting the page to Minimized
@@ -1020,7 +1026,7 @@ namespace ClassicUO.Game.UI.Gumps
             Add(leftArea, page);
             starty += leftArea.Height + _buttonHeight;
             int w = (WIDTH >> 3) * 2;
-            Add(new Label("Opacity", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = _buttonWidth >> 2, Y = starty - (_buttonHeight >> 2) }, page);
+            Add(new Label(MobileUiTranslation.Translate("Opacity"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = _buttonWidth >> 2, Y = starty - (_buttonHeight >> 2) }, page);
             _opacity = new HSliderBar((startx >> 2) + (_buttonWidth >> 1) + (_buttonWidth >> 2), starty - (_buttonHeight >> 3), w, 0, 99, 99, HSliderBarStyle.MetalWidgetRecessedBar);
             _opacity.ValueChanged += OnOpacityChanged;
             Add(_opacity, page);
@@ -1197,7 +1203,7 @@ namespace ClassicUO.Game.UI.Gumps
                         /*_commandPrefix = new Combobox(x + devx * 30, y, devx * 11, _commandprefixes, 0, font: 2);
                         Add(_commandPrefix, page);
                         y += _buttonHeight;*/
-                        Add(new Label("Delay between Actions", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
+                        Add(new Label(MobileUiTranslation.Translate("Delay between Actions"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
                         Add(_delayBetweenActions = new AssistArrowNumbersTextBox(x + devx * 30, y, devx * 11, 1, 50, 2500, FONT, 4), page);
                         _delayBetweenActions.ValueChanged += (sender, e) => _actionDelay = (uint)e;
                         y += buttondiffy + (_buttonHeight >> 4);
@@ -1228,7 +1234,7 @@ namespace ClassicUO.Game.UI.Gumps
                         Add(_gauntletBoneCutter, page);
                         Add(button = new NiceButton(x + devx * 32, y, devx * 22, buttondiffy, ButtonAction.Activate, "Set Blade") { IsSelectable = false, ButtonParameter = (int)ButtonType.BoneCutSetBlade }, page);
                         y += _buttonHeight;
-                        Label l = new Label("Show Bandage Timer: ", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y };
+                        Label l = new Label(MobileUiTranslation.Translate("Show Bandage Timer: "), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y };
                         Add(l, page);
                         Add(_bandageTimerStart = new AssistCheckbox(0x00D2, 0x00D3, "Start ", FONT, ScriptTextBox.GRAY_HUE, true) { X = x + l.Width, Y = y }, page);
                         Add(_bandageTimerEnd = new AssistCheckbox(0x00D2, 0x00D3, "End ", FONT, ScriptTextBox.GRAY_HUE, true) { X = x + l.Width + _bandageTimerStart.Width, Y = y }, page);
@@ -1246,7 +1252,8 @@ namespace ClassicUO.Game.UI.Gumps
                         Add(_openDoors, page);
                         string[] excluders = Enum.GetNames(typeof(ActionExclusion));
                         StringHelper.AddSpaceBeforeCapital(excluders);
-                        _openDoorsOptions = new Combobox(x + devx * 18, y, devx * 25, excluders, 0);
+                        string[] excludersDisplay = excluders.Select(s => MobileUiTranslation.Translate(s)).ToArray();
+                        _openDoorsOptions = new Combobox(x + devx * 18, y, devx * 25, excludersDisplay, 0);
                         Add(_openDoorsOptions, page);
                         y += _buttonHeight;
                         _doubleClickToOpenDoors = new AssistCheckbox(0x00D2, 0x00D3, "Use double click to open doors", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y };
@@ -1256,13 +1263,13 @@ namespace ClassicUO.Game.UI.Gumps
                         y += (buttondiffy >> 2) * 2;
                         _openCorpses = new AssistCheckbox(0x00D2, 0x00D3, "Enabled", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y };
                         Add(_openCorpses, page);
-                        Add(_openCorpsesOptions = new Combobox(x + devx * 18, y, devx * 25, excluders, 0), page);
+                        Add(_openCorpsesOptions = new Combobox(x + devx * 18, y, devx * 25, excludersDisplay, 0), page);
                         y += _buttonHeight;
-                        Add(new Label("Limit open range to", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
+                        Add(new Label(MobileUiTranslation.Translate("Limit open range to"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
                         _limitOpenRange = new AssistArrowNumbersTextBox(x + _buttonWidth * 5, y, devx * 12, 1, 0, 10, FONT, 2);
                         _limitOpenRange.ValueChanged += (sender, e) => _openCorpsesRange = (byte)e;
                         Add(_limitOpenRange, page);
-                        Add(new Label("tiles", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = _limitOpenRange.X + _limitOpenRange.Width + (_buttonWidth >> 3), Y = y }, page);
+                        Add(new Label(MobileUiTranslation.Translate("tiles"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = _limitOpenRange.X + _limitOpenRange.Width + (_buttonWidth >> 3), Y = y }, page);
                         break;
                     }
                     #endregion
@@ -1272,13 +1279,14 @@ namespace ClassicUO.Game.UI.Gumps
                         int x = startx - ((_buttonWidth >> 1) + (diffx >> 1)), buttondiffy = _buttonHeight - (_buttonHeight >> 3), y = starty + _buttonHeight + (_buttonHeight >> 2);
                         Line.CreateRectangleArea(this, x - (_buttonWidth >> 3), y, (_buttonWidth * 6 + diffx * 24) - diffx, _buttonHeight * 3, page, Color.Gray.PackedValue, 1, "Casting");
                         y += (_buttonHeight / 3);
-                        Add(new Label("Share spell target on", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
+                        Add(new Label(MobileUiTranslation.Translate("Share spell target on"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
                         string[] displaymodes = new string[(int)ShareTargetTo.All + 1];
                         for(int i = 0; i<displaymodes.Length; i++)
                         {
                             displaymodes[i] = StringHelper.AddSpaceBeforeCapital(((ShareTargetTo)i).ToString());
                         }
-                        _spellShareTargetOn = new Combobox(x + _buttonWidth * 5 + (_buttonWidth >> 1) + (_buttonWidth >> 3), y, diffx * 24, displaymodes, 0);
+                        string[] displaymodesDisplay = displaymodes.Select(s => MobileUiTranslation.Translate(s)).ToArray();
+                        _spellShareTargetOn = new Combobox(x + _buttonWidth * 5 + (_buttonWidth >> 1) + (_buttonWidth >> 3), y, diffx * 24, displaymodesDisplay, 0);
                         Add(_spellShareTargetOn, page);
                         y += buttondiffy;
                         _clearHandsBeforeCasting = new AssistCheckbox(0x00D2, 0x00D3, "Clear hands before casting", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y };
@@ -1287,12 +1295,13 @@ namespace ClassicUO.Game.UI.Gumps
                         //end first rect
                         Line.CreateRectangleArea(this, x - (_buttonWidth >> 3), y, (_buttonWidth * 6 + diffx * 24) - diffx, (_buttonHeight >> 1) * 14 + 2, page, Color.Gray.PackedValue, 1, "Targeting");
                         y += _buttonHeight / 3;
-                        Add(new Label("Smart last Target", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
-                        _smartLastTarget = new Combobox(x + _buttonWidth * 5 + (_buttonWidth >> 1) + (_buttonWidth >> 3), y, diffx * 24, Enum.GetNames(typeof(SmartTargetFor)), 0);
+                        Add(new Label(MobileUiTranslation.Translate("Smart last Target"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
+                        string[] smartTargetDisplay = Enum.GetNames(typeof(SmartTargetFor)).Select(s => MobileUiTranslation.Translate(s)).ToArray();
+                        _smartLastTarget = new Combobox(x + _buttonWidth * 5 + (_buttonWidth >> 1) + (_buttonWidth >> 3), y, diffx * 24, smartTargetDisplay, 0);
                         Add(_smartLastTarget, page);
                         y += buttondiffy + (_buttonHeight >> 3);
-                        Add(new Label("Share enemy target on", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
-                        _shareEnemyTargetOn = new Combobox(x + _buttonWidth * 5 + (_buttonWidth >> 1) + (_buttonWidth >> 3), y, diffx * 24, displaymodes, 0);
+                        Add(new Label(MobileUiTranslation.Translate("Share enemy target on"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
+                        _shareEnemyTargetOn = new Combobox(x + _buttonWidth * 5 + (_buttonWidth >> 1) + (_buttonWidth >> 3), y, diffx * 24, displaymodesDisplay, 0);
                         Add(_shareEnemyTargetOn, page);
                         y += buttondiffy;
                         _highlightCurrentTarget = new AssistCheckbox(0x00D2, 0x00D3, "Highlight current target", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y };
@@ -1365,7 +1374,8 @@ namespace ClassicUO.Game.UI.Gumps
                         Add(_healingEnabled = new AssistCheckbox(0x00D2, 0x00D3, "Enabled", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y }, page);
                         string[] names = Enum.GetNames(typeof(HealingOptsTarget));
                         StringHelper.AddSpaceBeforeCapital(names);
-                        Add(_friendHealSelection = new Combobox(x + _healingEnabled.Width + buttondiffx, y, _buttonWidth * 6, names, 0), page);
+                        string[] namesDisplay = names.Select(s => MobileUiTranslation.Translate(s)).ToArray();
+                        Add(_friendHealSelection = new Combobox(x + _healingEnabled.Width + buttondiffx, y, _buttonWidth * 6, namesDisplay, 0), page);
                         y += diffy * 2;
                         Add(_scalePriorityBasedOnHits = new AssistCheckbox(0x00D2, 0x00D3, "Scale priority based on hits", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y }, page);
                         y += diffy;
@@ -1374,13 +1384,13 @@ namespace ClassicUO.Game.UI.Gumps
                         Add(_startBelowCheck = new AssistCheckbox(0x00D2, 0x00D3, "Start below", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y }, page);
                         Add(_startBelowValue = new AssistArrowNumbersTextBox(x + _startBelowCheck.Width + (buttondiffx >> 1), y, buttondiffx * 3, 5, 5, 100, FONT, 3), page);
                         _startBelowValue.ValueChanged += (sender, e) => _autoBandageStartValue = (byte)e;
-                        Add(new Label("% hits", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = _startBelowValue.X + _startBelowValue.Width + buttondiffx, Y = y }, page);
+                        Add(new Label(MobileUiTranslation.Translate("% hits"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = _startBelowValue.X + _startBelowValue.Width + buttondiffx, Y = y }, page);
                         y += diffy;
                         Add(_allowHealingWhileHidden = new AssistCheckbox(0x00D2, 0x00D3, "Allow healing while hidden", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y }, page);
                         y += diffy * 2;
                         Add(_useDexterityFormulaDelay = new AssistCheckbox(0x00D2, 0x00D3, "Use dexterity formula delay", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y }, page);
                         y += diffy;
-                        Label l = new Label("Bandage action delay", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y };
+                        Label l = new Label(MobileUiTranslation.Translate("Bandage action delay"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y };
                         Add(l, page);
                         Add(_bandageActionDelay = new AssistArrowNumbersTextBox(x + l.Width + (buttondiffx >> 2), y, _buttonWidth * 3, 25, 500, 20000, FONT, 5), page);
                         _bandageActionDelay.ValueChanged += (sender, e) => _AutoBandageDelay = (uint)e;
@@ -2037,7 +2047,7 @@ namespace ClassicUO.Game.UI.Gumps
                         Add(_insertautolootItem = new NiceButton(x + (_autolootArea.Width >> 1) + (buttondiffx >> 1), y, (_autolootArea.Width >> 1) - (_buttonWidth >> 2), (_buttonHeight - (_buttonHeight >> 2)), ButtonAction.Activate, "Insert Item") { IsSelectable = false, ButtonParameter = (int)ButtonType.InsertAutolootItem }, page);
                         x = l[2].X + l[2].Width + 4;
                         Label lb;
-                        Add(lb = new Label("Limit", true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
+                        Add(lb = new Label(MobileUiTranslation.Translate("Limit"), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y }, page);
                         x += lb.Width + 2;
                         Add(_autolootAmount = new AssistArrowNumbersTextBox(x, y, _buttonWidth * 3, 100, 0, 60000, FONT, 6, true, FontStyle.None) { Text = "0", IsEnabled = false }, page);
                         _autolootAmount.ValueChanged += AutolootAmount_ValueChanged;
@@ -3711,8 +3721,23 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Dispose()
         {
+            if (UserPreferences.Language != null)
+            {
+                UserPreferences.Language.ValueChanged -= OnLanguagePreferenceChanged;
+            }
             _edge?.Dispose();
             base.Dispose();
+        }
+
+        private void OnLanguagePreferenceChanged(int value)
+        {
+            if (IsDisposed) return;
+            int page = ActivePage;
+            int curX = X;
+            int curY = Y;
+            Dispose();
+            UIManager.Add(UOSObjects.Gump = new AssistantGump(World) { X = curX, Y = curY });
+            UOSObjects.Gump.ChangePage(page);
         }
 
         private AssistCheckbox CreateCheckBox(AssistScrollArea area, string text, bool ischecked, int x, int y, ushort inactiveimg = 0x00D2, ushort activeimg = 0x00D3)

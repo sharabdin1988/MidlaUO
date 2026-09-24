@@ -10,6 +10,7 @@
 
 using System;
 using System.Linq;
+using ClassicUO.Game;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Utility.Logging;
@@ -154,18 +155,9 @@ namespace ClassicUO.MobileUI
             Log.Info($"[MobileUI] язык интерфейса: {Config.Language}");
         }
 
-        /// <summary>Сервер прислал содержимое контейнера — перечитать открытые мобильные списки.</summary>
+        /// <summary>Сервер прислал содержимое контейнера.</summary>
         public static void OnContainerUpdated()
         {
-            if (Config == null || !Config.Enabled)
-            {
-                return;
-            }
-
-            foreach (var gump in UIManager.Gumps.OfType<MobileContainerGump>())
-            {
-                gump.Rebuild();
-            }
         }
 
         /// <summary>Серийники надетых вещей игрока (для отметок «надето/снято»).</summary>
@@ -193,35 +185,6 @@ namespace ClassicUO.MobileUI
             return result;
         }
 
-        /// <summary>Переключить пресет размера окна (0/1/2) и сохранить.</summary>
-        public static void CycleWindowPreset()
-        {
-            Init();
-
-            Config.WindowPreset = (Config.WindowPreset + 1) % 3;
-            Config.Save();
-        }
-
-        public static void ChangeRowHeight(int delta)
-        {
-            Init();
-
-            int value = Config.RowHeight + delta;
-
-            if (value < 28)
-            {
-                value = 28;
-            }
-
-            if (value > 72)
-            {
-                value = 72;
-            }
-
-            Config.RowHeight = value;
-            Config.Save();
-        }
-
         /// <summary>Открыть мобильный список заклинаний для книги.</summary>
         public static void OpenSpellbook(uint bookSerial)
         {
@@ -242,37 +205,9 @@ namespace ClassicUO.MobileUI
             UIManager.Add(new MobileSpellbookGump(world, bookSerial));
         }
 
-        /// <summary>Переоткрыть экран контейнера — применяет новый размер окна и строк.</summary>
-        public static void ReopenContainer(uint serial)
-        {
-            var world = ClassicUO.Client.Game.UO.World;
-
-            if (world == null || world.Player == null)
-            {
-                return;
-            }
-
-            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.ContainerSerial == serial);
-
-            int x = 60;
-            int y = 120;
-
-            if (existing != null)
-            {
-                // запоминаем позицию и закрываем старое окно, иначе остаётся дубль
-                x = existing.X;
-                y = existing.Y;
-                existing.Dispose();
-            }
-
-            UIManager.Add(new MobileContainerGump(world, serial) { X = x, Y = y });
-        }
-
-        /// <summary>Открыть экран рюкзака (мобильный список предметов).</summary>
+        /// <summary>Открыть рюкзак игрока (нативная масштабируемая сумка).</summary>
         public static void OpenBackpack()
         {
-            Init();
-
             var world = ClassicUO.Client.Game.UO.World;
 
             if (world == null || world.Player == null)
@@ -282,19 +217,10 @@ namespace ClassicUO.MobileUI
 
             var backpack = world.Player.FindItemByLayer(ClassicUO.Game.Data.Layer.Backpack);
 
-            if (backpack == null)
+            if (backpack != null)
             {
-                return;
+                GameActions.DoubleClick(world, backpack.Serial);
             }
-
-            var existing = UIManager.Gumps.OfType<MobileContainerGump>().FirstOrDefault(g => g.ContainerSerial == backpack.Serial);
-
-            if (existing != null)
-            {
-                existing.Dispose();
-            }
-
-            UIManager.Add(new MobileContainerGump(world, backpack.Serial));
         }
 
         /// <summary>Открыть (или пересоздать) панель настроек, чтобы подписи были актуальными.</summary>

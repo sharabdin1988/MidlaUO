@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System.Collections.Generic;
 // MobileUO: added import
@@ -33,11 +33,17 @@ namespace ClassicUO.Game.UI.Controls
         {
             _action = action;
 
+            string displayText = ClassicUO.MobileUI.MobileUiTranslation.Translate(text);
+            if (!unicode && ClassicUO.MobileUI.MobileUiTranslation.IsRussian)
+            {
+                unicode = true;
+            }
+
             Add
             (
                 TextLabel = new Label
                 (
-                    text,
+                    displayText,
                     unicode,
                     hue,
                     w,

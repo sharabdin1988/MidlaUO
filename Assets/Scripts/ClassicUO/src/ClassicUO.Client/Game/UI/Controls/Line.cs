@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Renderer;
@@ -49,6 +49,7 @@ namespace ClassicUO.Game.UI.Controls
 
             if (!string.IsNullOrEmpty(toplabel))
             {
+                toplabel = ClassicUO.MobileUI.MobileUiTranslation.Translate(toplabel);
                 Label l = new Label(toplabel, true, textcolor, font: textfont);
                 int rwidth = (width - l.Width) >> 1;
                 l.X = startx + rwidth + 2;

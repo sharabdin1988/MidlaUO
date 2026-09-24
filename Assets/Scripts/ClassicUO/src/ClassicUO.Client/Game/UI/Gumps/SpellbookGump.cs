@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Collections.Generic;
@@ -103,6 +103,8 @@ namespace ClassicUO.Game.UI.Gumps
         internal int MobileSpellSlots => _spells.Length;
         internal void MobileGetSpellNames(int index, out string name, out string reagents) =>
             GetSpellNames(index, out name, out _, out reagents);
+        internal SpellDefinition MobileGetSpellDefinition(int index) => GetSpellDefinition(index + 1);
+        internal SpellBookType MobileBookType => _spellBookType;
 
         public override void Save(XmlTextWriter writer)
         {

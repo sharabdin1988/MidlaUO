@@ -1,32 +1,64 @@
-// Мобильный интерфейс: список заклинаний книги (клиентское окно, сервер не участвует).
+// SPDX-License-Identifier: BSD-2-Clause
 //
-// Штатная книга заклинаний остаётся источником данных (она получает список от
-// сервера), но скрывается, а игрок видит крупный список: название заклинания,
-// реагенты и стоимость. Нажатие по строке — каст из книги.
+// Мобильный интерфейс: сенсорная книга заклинаний (Spellbook).
+//
+// Заменяет мелкую книгу 1998 года крупным сенсорным интерфейсом:
+//   * фильтры по кругам магии (Круги 1–8) и вкладка «✈ Быстрые» (Recall, Gate, Heal, Cure...);
+//   * крупные иконки заклинаний и список реагентов;
+//   * кнопка мгновенного каста [ КАСТ ] (и каст по тапу на всю строку);
+//   * кнопка [ + Экран ] — выносит иконку заклинания прямо на игровой экран (HUD).
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using ClassicUO.Assets;
+using ClassicUO.Game;
+using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.UI.Controls;
+using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
 using Microsoft.Xna.Framework;
 
-namespace ClassicUO.Game.UI.Gumps
+namespace ClassicUO.MobileUI
 {
-    internal class MobileSpellbookGump : Gump
+    internal sealed class MobileSpellbookGump : Gump
     {
-        private const int WinWidth = 620;
-        private const int WinHeight = 470;
-        private const int RowHeight = 38;
-        private const int HeaderHeight = 46;
-        private const int FooterHeight = 36;
+        private const int WinWidth = 560;
+        private const int WinHeight = 450;
+        private const int HeaderHeight = 44;
+        private const int TabsHeight = 36;
+        private const int FooterHeight = 34;
+        private const int RowHeight = 52;
 
         private readonly uint _bookSerial;
         private ScrollArea _list;
         private Label _summary;
         private DateTime _lastRefresh = DateTime.MinValue;
+        private int _selectedTab = 0; // 0: Быстрые, 1..8: Круги 1..8, 9: Все
+        private readonly List<NiceButton> _tabButtons = new List<NiceButton>();
+
+        // Быстрые/жизненно важные заклинания (индексы 0..63)
+        // 31: Recall, 51: Gate Travel, 21: Teleport, 44: Mark,
+        // 28: Greater Heal, 3: Heal, 10: Cure, 24: Arch Cure,
+        // 16: Bless, 14: Protection, 6: Reactive Armor, 42: Invisibility, 35: Magic Reflection
+        private static readonly int[] QuickSpellIndices = new int[]
+        {
+            31, // Recall (Круг 4)
+            51, // Gate Travel (Круг 7)
+            21, // Teleport (Круг 3)
+            44, // Mark (Круг 6)
+            28, // Greater Heal (Круг 4)
+            3,  // Heal (Круг 1)
+            10, // Cure (Круг 2)
+            24, // Arch Cure (Круг 4)
+            16, // Bless (Круг 3)
+            14, // Protection (Круг 2)
+            6,  // Reactive Armor (Круг 1)
+            42, // Invisibility (Круг 6)
+            35, // Magic Reflection (Круг 5)
+        };
 
         public MobileSpellbookGump(World world, uint bookSerial) : base(world, 0, 0)
         {
@@ -41,56 +73,137 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override GumpType GumpType => GumpType.None;
 
-        /// <summary>Серийник книги (LocalSerial у гумпа нулевой).</summary>
         public uint BookSerial => _bookSerial;
 
         private SpellbookGump Source => UIManager.Gumps.OfType<SpellbookGump>().FirstOrDefault(g => g.LocalSerial == _bookSerial);
 
         private void Build()
         {
-            Add(new ResizePic(0x0A3C) { X = 0, Y = 0, Width = WinWidth, Height = WinHeight });
+            Add(new ResizePic(0x0A3C)
+            {
+                X = 0,
+                Y = 0,
+                Width = WinWidth,
+                Height = WinHeight
+            });
 
             Width = WinWidth;
             Height = WinHeight;
 
+            // Заголовок
             Add(new Label(
-                ClassicUO.MobileUI.MobileUiController.T("spellbook"),
-                true, 0x0386, WinWidth - 130, 255, FontStyle.BlackBorder)
+                MobileUiController.T("spellbook"),
+                true,
+                0x0386,
+                200,
+                255,
+                FontStyle.BlackBorder)
             {
                 X = 16,
                 Y = 12
             });
 
-            _summary = new Label("", true, 0x03B2, WinWidth - 130, 255, FontStyle.BlackBorder)
+            _summary = new Label("", true, 0x03B2, 220, 255, FontStyle.BlackBorder)
             {
                 X = 16,
-                Y = 30
+                Y = 28
             };
-
             Add(_summary);
 
-            _list = new ScrollArea(10, HeaderHeight, WinWidth - 20, WinHeight - HeaderHeight - FooterHeight, true)
+            // Кнопка закрытия [X]
+            Add(new NiceButton(WinWidth - 90, 10, 76, 26, ButtonAction.Activate, MobileUiController.T("close"))
+            {
+                ButtonParameter = 0,
+                IsSelectable = false
+            });
+
+            // Панель вкладок: [ ✈ Быстрые ] [ 1 ] .. [ 8 ] [ Все ]
+            BuildTabs();
+
+            // Область со списком заклинаний
+            int listTop = HeaderHeight + TabsHeight;
+            int listHeight = WinHeight - listTop - FooterHeight;
+
+            _list = new ScrollArea(10, listTop, WinWidth - 20, listHeight, true)
             {
                 AcceptMouseInput = true
             };
 
             Add(_list);
 
-            Add(new NiceButton(WinWidth - 200, WinHeight - 30, 90, 22, ButtonAction.Activate,
-                ClassicUO.MobileUI.MobileUiController.T("refresh"))
-            {
-                ButtonParameter = 1,
-                IsSelectable = false
-            });
+            Fill();
+        }
 
-            Add(new NiceButton(WinWidth - 100, WinHeight - 30, 90, 22, ButtonAction.Activate,
-                ClassicUO.MobileUI.MobileUiController.T("close"))
+        private void BuildTabs()
+        {
+            _tabButtons.Clear();
+
+            int y = HeaderHeight + 2;
+            int x = 12;
+
+            // Вкладка «✈ Быстрые»
+            var btnQuick = new NiceButton(x, y, 92, 26, ButtonAction.Activate, MobileUiController.T("tab_quick"))
             {
-                ButtonParameter = 0,
-                IsSelectable = false
-            });
+                ButtonParameter = 100,
+                IsSelected = _selectedTab == 0
+            };
+            _tabButtons.Add(btnQuick);
+            Add(btnQuick);
+            x += 96;
+
+            // Вкладки кругов 1..8
+            for (int circle = 1; circle <= 8; circle++)
+            {
+                int tabIndex = circle;
+                var btn = new NiceButton(x, y, 35, 26, ButtonAction.Activate, circle.ToString())
+                {
+                    ButtonParameter = 100 + tabIndex,
+                    IsSelected = _selectedTab == tabIndex
+                };
+                _tabButtons.Add(btn);
+                Add(btn);
+                x += 38;
+            }
+
+            // Вкладка «Все»
+            var btnAll = new NiceButton(x, y, 52, 26, ButtonAction.Activate, MobileUiController.T("tab_all"))
+            {
+                ButtonParameter = 109,
+                IsSelected = _selectedTab == 9
+            };
+            _tabButtons.Add(btnAll);
+            Add(btnAll);
+        }
+
+        private void SelectTab(int tabIndex)
+        {
+            _selectedTab = tabIndex;
+
+            for (int i = 0; i < _tabButtons.Count; i++)
+            {
+                _tabButtons[i].IsSelected = (i == tabIndex);
+            }
 
             Fill();
+        }
+
+        public override void OnButtonClick(int buttonID)
+        {
+            if (buttonID == 0)
+            {
+                // Закрыть окно и связанный исходный гумп
+                Source?.Dispose();
+                Dispose();
+                return;
+            }
+
+            if (buttonID >= 100 && buttonID <= 109)
+            {
+                SelectTab(buttonID - 100);
+                return;
+            }
+
+            base.OnButtonClick(buttonID);
         }
 
         private void Fill()
@@ -101,58 +214,98 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (book == null)
             {
-                _summary.Text = ClassicUO.MobileUI.MobileUiController.T("spellbook_wait");
+                _summary.Text = MobileUiController.T("spellbook_wait");
+                return;
+            }
 
+            List<int> spellIndicesToShow = new List<int>();
+
+            if (_selectedTab == 0)
+            {
+                // Быстрые заклинания
+                foreach (int idx in QuickSpellIndices)
+                {
+                    if (book.MobileHasSpell(idx))
+                    {
+                        spellIndicesToShow.Add(idx);
+                    }
+                }
+            }
+            else if (_selectedTab >= 1 && _selectedTab <= 8)
+            {
+                // Круг магии 1..8 (по 8 заклинаний на круг)
+                int start = (_selectedTab - 1) * 8;
+                int end = Math.Min(start + 8, book.MobileSpellSlots);
+
+                for (int i = start; i < end; i++)
+                {
+                    if (book.MobileHasSpell(i))
+                    {
+                        spellIndicesToShow.Add(i);
+                    }
+                }
+            }
+            else
+            {
+                // Все заклинания в книге
+                for (int i = 0; i < book.MobileSpellSlots; i++)
+                {
+                    if (book.MobileHasSpell(i))
+                    {
+                        spellIndicesToShow.Add(i);
+                    }
+                }
+            }
+
+            int countTotal = 0;
+            for (int i = 0; i < book.MobileSpellSlots; i++)
+            {
+                if (book.MobileHasSpell(i)) countTotal++;
+            }
+
+            _summary.Text = string.Format(MobileUiController.T("spellbook_summary"), countTotal);
+
+            if (spellIndicesToShow.Count == 0)
+            {
+                _list.Add(new Label(
+                    MobileUiController.T("spellbook_wait"),
+                    true,
+                    0x03B2,
+                    WinWidth - 60,
+                    255,
+                    FontStyle.BlackBorder)
+                {
+                    X = 16,
+                    Y = 16
+                });
                 return;
             }
 
             int y = 0;
-            int count = 0;
 
-            for (int i = 0; i < book.MobileSpellSlots; i++)
+            foreach (int index in spellIndicesToShow)
             {
-                if (!book.MobileHasSpell(i))
-                {
-                    continue;
-                }
-
-                int index = i;
-                count++;
-
-                string name;
-
-                try
-                {
-                    book.MobileGetSpellNames(i, out name, out _);
-                }
-                catch (Exception)
-                {
-                    name = ClassicUO.MobileUI.MobileUiController.T("spell") + " #" + (i + 1);
-                }
-
-                AddRow(index, name ?? ("#" + (i + 1)), y);
+                AddSpellRow(book, index, y);
                 y += RowHeight;
-            }
-
-            _summary.Text = string.Format(ClassicUO.MobileUI.MobileUiController.T("spellbook_summary"), count);
-
-            if (count == 0)
-            {
-                _list.Add(new Label(ClassicUO.MobileUI.MobileUiController.T("spellbook_wait"),
-                    true, 0x03B2, WinWidth - 60, 255, FontStyle.BlackBorder)
-                {
-                    X = 16,
-                    Y = 8
-                });
             }
         }
 
-        private void AddRow(int index, string name, int y)
+        private void AddSpellRow(SpellbookGump book, int index, int y)
         {
-            var row = new AlphaBlendControl(0.35f) { X = 0, Y = y, Width = WinWidth - 44, Height = RowHeight };
-            _list.Add(row);
+            int rowWidth = WinWidth - 44;
 
-            var hit = new HitBox(0, y, WinWidth - 44, RowHeight, null, 0f);
+            // Фоновая подложка
+            var bg = new AlphaBlendControl(0.35f)
+            {
+                X = 0,
+                Y = y,
+                Width = rowWidth,
+                Height = RowHeight - 4
+            };
+            _list.Add(bg);
+
+            // Клик по строке запускает каст
+            var hit = new HitBox(0, y, rowWidth - 170, RowHeight - 4, null, 0f);
             _list.Add(hit);
 
             hit.MouseUp += (sender, e) =>
@@ -163,43 +316,142 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             };
 
-            _list.Add(new Label(name, true, 0xFFFF, WinWidth - 120, 255, FontStyle.BlackBorder)
+            // Иконка заклинания
+            ushort iconGraphic = (ushort)(0x08C0 + index);
+            var iconPic = new GumpPic(6, y + 2, iconGraphic, 0)
             {
-                X = 12,
-                Y = y + 10
+                AcceptMouseInput = false
+            };
+            _list.Add(iconPic);
+
+            // Получаем имя, круг и реагенты
+            string name = null;
+            string reagents = null;
+
+            try
+            {
+                book.MobileGetSpellNames(index, out name, out reagents);
+            }
+            catch (Exception)
+            {
+                name = MobileUiController.T("spell") + " #" + (index + 1);
+            }
+
+            int circle = (index / 8) + 1;
+            var spellDef = book.MobileGetSpellDefinition(index);
+            int manaCost = spellDef?.ManaCost ?? 0;
+
+            // Название заклинания
+            _list.Add(new Label(
+                name ?? ("#" + (index + 1)),
+                true,
+                0xFFFF,
+                240,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 56,
+                Y = y + 6
             });
+
+            // Описание: круг, мана, реагенты
+            string details = $"{MobileUiController.T("circle")} {circle} · {MobileUiController.T("mana")}: {manaCost}";
+            if (!string.IsNullOrEmpty(reagents))
+            {
+                details += $" · {reagents}";
+            }
+
+            _list.Add(new Label(
+                details,
+                true,
+                0x0386,
+                250,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 56,
+                Y = y + 26
+            });
+
+            // Кнопка «+ Экран» (вынести на игровой HUD)
+            int spellIdxCopy = index;
+            var btnPin = new NiceButton(rowWidth - 162, y + 8, 76, 32, ButtonAction.Activate, MobileUiController.T("pin"))
+            {
+                IsSelectable = false
+            };
+            btnPin.MouseUp += (s, e) =>
+            {
+                if (e.Button == MouseButtonType.Left)
+                {
+                    PinSpellToScreen(spellIdxCopy);
+                }
+            };
+            _list.Add(btnPin);
+
+            // Кнопка «КАСТ»
+            var btnCast = new NiceButton(rowWidth - 80, y + 8, 74, 32, ButtonAction.Activate, MobileUiController.T("cast"))
+            {
+                IsSelectable = false
+            };
+            btnCast.MouseUp += (s, e) =>
+            {
+                if (e.Button == MouseButtonType.Left)
+                {
+                    GameActions.CastSpellFromBook(spellIdxCopy, _bookSerial);
+                }
+            };
+            _list.Add(btnCast);
+        }
+
+        private void PinSpellToScreen(int index)
+        {
+            var book = Source;
+            if (book == null) return;
+
+            var def = book.MobileGetSpellDefinition(index);
+            if (def == null) return;
+
+            // Проверяем, есть ли уже такая кнопка
+            var existing = UIManager.Gumps.OfType<UseSpellButtonGump>().FirstOrDefault(g => g.SpellID == def.ID);
+            if (existing != null)
+            {
+                existing.BringOnTop();
+                return;
+            }
+
+            int count = UIManager.Gumps.OfType<UseSpellButtonGump>().Count();
+            int screenX = 120 + (count % 4) * 50;
+            int screenY = 120 + (count / 4) * 50;
+
+            var gump = new UseSpellButtonGump(World, def)
+            {
+                X = screenX,
+                Y = screenY
+            };
+
+            UIManager.Add(gump);
         }
 
         public override void Update()
         {
             base.Update();
 
-            // список приходит от сервера после открытия книги — подхватываем его
             if ((DateTime.UtcNow - _lastRefresh).TotalSeconds >= 1.0)
             {
                 _lastRefresh = DateTime.UtcNow;
 
-                if (_list.Children.Count <= 2)
+                var book = Source;
+                if (book != null && _list.Children.Count <= 1)
                 {
                     Fill();
                 }
             }
         }
 
-        public override void OnButtonClick(int buttonID)
+        protected override void CloseWithRightClick()
         {
-            switch (buttonID)
-            {
-                case 1:
-                    Fill();
-
-                    return;
-
-                default:
-                    Dispose();
-
-                    return;
-            }
+            Source?.Dispose();
+            base.CloseWithRightClick();
         }
     }
 }
