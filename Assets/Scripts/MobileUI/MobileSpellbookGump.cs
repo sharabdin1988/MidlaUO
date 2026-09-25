@@ -39,6 +39,14 @@ namespace ClassicUO.MobileUI
         private int _selectedTab = 0; // 0: Быстрые, 1..8: Круги 1..8, 9: Все
         private readonly List<NiceButton> _tabButtons = new List<NiceButton>();
 
+        private ResizePic _background;
+        private Button _resizeButton;
+        private NiceButton _btnClose;
+        private NiceButton _btnPlus;
+        private NiceButton _btnMinus;
+        private bool _resizing;
+        private Point _startSize;
+
         // Быстрые/жизненно важные заклинания (индексы 0..63)
         // 31: Recall, 51: Gate Travel, 21: Teleport, 44: Mark,
         // 28: Greater Heal, 3: Heal, 10: Cure, 24: Arch Cure,
@@ -93,16 +101,19 @@ namespace ClassicUO.MobileUI
 
         public void Rebuild()
         {
+            Width = WinWidth;
+            Height = WinHeight;
+
             Clear();
             Children.Clear();
 
-            if (X + WinWidth > UIManager.Width)
+            if (X + Width > MobileUiController.ScreenWidth)
             {
-                X = Math.Max(0, UIManager.Width - WinWidth);
+                X = Math.Max(0, MobileUiController.ScreenWidth - Width);
             }
-            if (Y + WinHeight > UIManager.Height)
+            if (Y + Height > MobileUiController.ScreenHeight)
             {
-                Y = Math.Max(0, UIManager.Height - WinHeight);
+                Y = Math.Max(0, MobileUiController.ScreenHeight - Height);
             }
 
             Build();
@@ -110,16 +121,20 @@ namespace ClassicUO.MobileUI
 
         private void Build()
         {
-            Add(new ResizePic(0x0A3C)
+            if (Width <= 0 || Height <= 0)
+            {
+                Width = WinWidth;
+                Height = WinHeight;
+            }
+
+            _background = new ResizePic(0x0A3C)
             {
                 X = 0,
                 Y = 0,
-                Width = WinWidth,
-                Height = WinHeight
-            });
-
-            Width = WinWidth;
-            Height = WinHeight;
+                Width = Width,
+                Height = Height
+            };
+            Add(_background);
 
             // Заголовок
             Add(new Label(
@@ -142,41 +157,72 @@ namespace ClassicUO.MobileUI
             Add(_summary);
 
             // Кнопка уменьшения масштаба [ − ]
-            Add(new NiceButton(WinWidth - 126, 10, 30, 26, ButtonAction.Activate, "−")
+            _btnMinus = new NiceButton(Width - 126, 10, 30, 26, ButtonAction.Activate, "−")
             {
                 ButtonParameter = 201,
                 IsSelectable = false
-            });
+            };
+            Add(_btnMinus);
 
             // Кнопка увеличения масштаба [ + ]
-            Add(new NiceButton(WinWidth - 94, 10, 30, 26, ButtonAction.Activate, "+")
+            _btnPlus = new NiceButton(Width - 94, 10, 30, 26, ButtonAction.Activate, "+")
             {
                 ButtonParameter = 202,
                 IsSelectable = false
-            });
+            };
+            Add(_btnPlus);
 
             // Кнопка закрытия [ ✕ ]
-            Add(new NiceButton(WinWidth - 62, 10, 52, 26, ButtonAction.Activate, MobileUiController.T("close"))
+            _btnClose = new NiceButton(Width - 62, 10, 52, 26, ButtonAction.Activate, MobileUiController.T("close"))
             {
                 ButtonParameter = 0,
                 IsSelectable = false
-            });
+            };
+            Add(_btnClose);
 
-            // Уголок переключения размера внизу справа [ ⇲ ]
-            Add(new NiceButton(WinWidth - 28, WinHeight - 28, 24, 24, ButtonAction.Activate, "⇲")
+            // Кружочек изменения размера справа внизу над углом (как в главном окне ClassicUO / ResizableGump: 0x837/0x838)
+            _resizeButton = new Button(0, 0x837, 0x838, 0x838)
             {
-                ButtonParameter = 203,
-                IsSelectable = false
-            });
+                ButtonAction = ButtonAction.Activate,
+                ButtonParameter = 203
+            };
+
+            if (UnityEngine.Application.isMobilePlatform)
+            {
+                _resizeButton.Width *= 2;
+                _resizeButton.Height *= 2;
+                _resizeButton.ContainsByBounds = true;
+            }
+
+            _resizeButton.X = Width - _resizeButton.Width + 2;
+            _resizeButton.Y = Height - _resizeButton.Height + 2;
+
+            _resizeButton.MouseDown += (sender, e) =>
+            {
+                _resizing = true;
+                _startSize = new Point(Width, Height);
+            };
+
+            _resizeButton.MouseUp += (sender, e) =>
+            {
+                if (_resizing)
+                {
+                    _resizing = false;
+                    _startSize = new Point(Width, Height);
+                    Fill();
+                }
+            };
+
+            Add(_resizeButton);
 
             // Панель вкладок: [ ✈ Быстрые ] [ 1 ] .. [ 8 ] [ Все ]
             BuildTabs();
 
             // Область со списком заклинаний
             int listTop = HeaderHeight + TabsHeight;
-            int listHeight = WinHeight - listTop - FooterHeight;
+            int listHeight = Height - listTop - FooterHeight;
 
-            _list = new ScrollArea(10, listTop, WinWidth - 20, listHeight, true)
+            _list = new ScrollArea(10, listTop, Width - 20, Math.Max(50, listHeight), true)
             {
                 AcceptMouseInput = true
             };
@@ -184,6 +230,33 @@ namespace ClassicUO.MobileUI
             Add(_list);
 
             Fill();
+        }
+
+        private void OnResize()
+        {
+            if (_background != null)
+            {
+                _background.Width = Width;
+                _background.Height = Height;
+            }
+
+            if (_resizeButton != null)
+            {
+                _resizeButton.X = Width - _resizeButton.Width + 2;
+                _resizeButton.Y = Height - _resizeButton.Height + 2;
+            }
+
+            if (_btnClose != null) _btnClose.X = Width - 62;
+            if (_btnPlus != null) _btnPlus.X = Width - 94;
+            if (_btnMinus != null) _btnMinus.X = Width - 126;
+
+            if (_list != null)
+            {
+                int listTop = HeaderHeight + TabsHeight;
+                int listHeight = Height - listTop - FooterHeight;
+                _list.Width = Width - 20;
+                _list.Height = Math.Max(50, listHeight);
+            }
         }
 
         private void BuildTabs()
@@ -344,7 +417,7 @@ namespace ClassicUO.MobileUI
                     MobileUiController.T("spellbook_wait"),
                     true,
                     0x03B2,
-                    WinWidth - 60,
+                    Width - 60,
                     255,
                     FontStyle.BlackBorder)
                 {
@@ -365,7 +438,7 @@ namespace ClassicUO.MobileUI
 
         private void AddSpellRow(SpellbookGump book, int index, int y)
         {
-            int rowWidth = WinWidth - 44;
+            int rowWidth = Width - 44;
 
             // Фоновая подложка
             var bg = new AlphaBlendControl(0.35f)
@@ -519,6 +592,31 @@ namespace ClassicUO.MobileUI
         public override void Update()
         {
             base.Update();
+
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (_resizing)
+            {
+                Point offset = Mouse.LDragOffset;
+                if (offset != Point.Zero)
+                {
+                    int w = _startSize.X + offset.X;
+                    int h = _startSize.Y + offset.Y;
+
+                    w = Math.Max(420, Math.Min(MobileUiController.ScreenWidth, w));
+                    h = Math.Max(320, Math.Min(MobileUiController.ScreenHeight, h));
+
+                    if (w != Width || h != Height)
+                    {
+                        Width = w;
+                        Height = h;
+                        OnResize();
+                    }
+                }
+            }
 
             var book = Source;
             if (book == null || book.IsDisposed)

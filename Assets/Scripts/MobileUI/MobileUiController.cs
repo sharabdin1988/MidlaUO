@@ -226,6 +226,9 @@ namespace ClassicUO.MobileUI
             }
         }
 
+        public static int ScreenWidth => Client.Game?.Window?.ClientBounds.Width ?? 1280;
+        public static int ScreenHeight => Client.Game?.Window?.ClientBounds.Height ?? 720;
+
         public static int ContainerScale => ClassicUO.Configuration.ProfileManager.CurrentProfile?.ContainersScale ?? 100;
 
         public static void ChangeContainerScale(int delta)

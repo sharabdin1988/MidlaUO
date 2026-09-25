@@ -47,6 +47,15 @@ namespace ClassicUO.MobileUI
         private readonly int _maxCharges;
         private ScrollArea _list;
 
+        private ResizePic _background;
+        private Button _resizeButton;
+        private NiceButton _btnRecharge;
+        private NiceButton _btnClose;
+        private NiceButton _btnPlus;
+        private NiceButton _btnMinus;
+        private bool _resizing;
+        private Point _startSize;
+
         public MobileRunebookGump(World world, uint sender, uint gumpID, string layout, string[] lines)
             : base(world, sender, gumpID)
         {
@@ -135,16 +144,19 @@ namespace ClassicUO.MobileUI
 
         public void Rebuild()
         {
+            Width = WinWidth;
+            Height = WinHeight;
+
             Clear();
             Children.Clear();
 
-            if (X + WinWidth > UIManager.Width)
+            if (X + Width > MobileUiController.ScreenWidth)
             {
-                X = Math.Max(0, UIManager.Width - WinWidth);
+                X = Math.Max(0, MobileUiController.ScreenWidth - Width);
             }
-            if (Y + WinHeight > UIManager.Height)
+            if (Y + Height > MobileUiController.ScreenHeight)
             {
-                Y = Math.Max(0, UIManager.Height - WinHeight);
+                Y = Math.Max(0, MobileUiController.ScreenHeight - Height);
             }
 
             Build();
@@ -152,16 +164,20 @@ namespace ClassicUO.MobileUI
 
         private void Build()
         {
-            Add(new ResizePic(0x0A3C)
+            if (Width <= 0 || Height <= 0)
+            {
+                Width = WinWidth;
+                Height = WinHeight;
+            }
+
+            _background = new ResizePic(0x0A3C)
             {
                 X = 0,
                 Y = 0,
-                Width = WinWidth,
-                Height = WinHeight
-            });
-
-            Width = WinWidth;
-            Height = WinHeight;
+                Width = Width,
+                Height = Height
+            };
+            Add(_background);
 
             // Заголовок
             Add(new Label(
@@ -191,42 +207,74 @@ namespace ClassicUO.MobileUI
             });
 
             // Кнопка подзарядки
-            Add(new NiceButton(WinWidth - 216, 12, 80, 26, ButtonAction.Activate, MobileUiController.T("recharge"))
+            _btnRecharge = new NiceButton(Width - 216, 12, 80, 26, ButtonAction.Activate, MobileUiController.T("recharge"))
             {
                 ButtonParameter = 800,
                 IsSelectable = false
-            });
+            };
+            Add(_btnRecharge);
 
             // Кнопка уменьшения масштаба [ − ]
-            Add(new NiceButton(WinWidth - 130, 12, 30, 26, ButtonAction.Activate, "−")
+            _btnMinus = new NiceButton(Width - 130, 12, 30, 26, ButtonAction.Activate, "−")
             {
                 ButtonParameter = 201,
                 IsSelectable = false
-            });
+            };
+            Add(_btnMinus);
 
             // Кнопка увеличения масштаба [ + ]
-            Add(new NiceButton(WinWidth - 96, 12, 30, 26, ButtonAction.Activate, "+")
+            _btnPlus = new NiceButton(Width - 96, 12, 30, 26, ButtonAction.Activate, "+")
             {
                 ButtonParameter = 202,
                 IsSelectable = false
-            });
+            };
+            Add(_btnPlus);
 
             // Кнопка закрытия [X]
-            Add(new NiceButton(WinWidth - 62, 12, 52, 26, ButtonAction.Activate, MobileUiController.T("close"))
+            _btnClose = new NiceButton(Width - 62, 12, 52, 26, ButtonAction.Activate, MobileUiController.T("close"))
             {
                 ButtonParameter = 0,
                 IsSelectable = false
-            });
+            };
+            Add(_btnClose);
 
-            // Уголок переключения размера внизу справа [ ⇲ ]
-            Add(new NiceButton(WinWidth - 28, WinHeight - 28, 24, 24, ButtonAction.Activate, "⇲")
+            // Кружочек изменения размера справа внизу над углом (как в главном окне ClassicUO / ResizableGump: 0x837/0x838)
+            _resizeButton = new Button(0, 0x837, 0x838, 0x838)
             {
-                ButtonParameter = 203,
-                IsSelectable = false
-            });
+                ButtonAction = ButtonAction.Activate,
+                ButtonParameter = 203
+            };
+
+            if (UnityEngine.Application.isMobilePlatform)
+            {
+                _resizeButton.Width *= 2;
+                _resizeButton.Height *= 2;
+                _resizeButton.ContainsByBounds = true;
+            }
+
+            _resizeButton.X = Width - _resizeButton.Width + 2;
+            _resizeButton.Y = Height - _resizeButton.Height + 2;
+
+            _resizeButton.MouseDown += (sender, e) =>
+            {
+                _resizing = true;
+                _startSize = new Point(Width, Height);
+            };
+
+            _resizeButton.MouseUp += (sender, e) =>
+            {
+                if (_resizing)
+                {
+                    _resizing = false;
+                    _startSize = new Point(Width, Height);
+                    Fill();
+                }
+            };
+
+            Add(_resizeButton);
 
             // Область со списком рун
-            _list = new ScrollArea(10, HeaderHeight, WinWidth - 20, WinHeight - HeaderHeight - FooterHeight, true)
+            _list = new ScrollArea(10, HeaderHeight, Width - 20, Math.Max(50, Height - HeaderHeight - FooterHeight), true)
             {
                 AcceptMouseInput = true
             };
@@ -234,6 +282,32 @@ namespace ClassicUO.MobileUI
             Add(_list);
 
             Fill();
+        }
+
+        private void OnResize()
+        {
+            if (_background != null)
+            {
+                _background.Width = Width;
+                _background.Height = Height;
+            }
+
+            if (_resizeButton != null)
+            {
+                _resizeButton.X = Width - _resizeButton.Width + 2;
+                _resizeButton.Y = Height - _resizeButton.Height + 2;
+            }
+
+            if (_btnClose != null) _btnClose.X = Width - 62;
+            if (_btnPlus != null) _btnPlus.X = Width - 96;
+            if (_btnMinus != null) _btnMinus.X = Width - 130;
+            if (_btnRecharge != null) _btnRecharge.X = Width - 216;
+
+            if (_list != null)
+            {
+                _list.Width = Width - 20;
+                _list.Height = Math.Max(50, Height - HeaderHeight - FooterHeight);
+            }
         }
 
         private void Fill()
@@ -246,7 +320,7 @@ namespace ClassicUO.MobileUI
                     MobileUiController.T("runebook_empty"),
                     true,
                     0x03B2,
-                    WinWidth - 40,
+                    Width - 40,
                     255,
                     FontStyle.BlackBorder)
                 {
@@ -269,7 +343,7 @@ namespace ClassicUO.MobileUI
 
         private void AddRuneRow(RuneEntry rune, int y)
         {
-            int rowWidth = WinWidth - 44;
+            int rowWidth = Width - 44;
 
             // Фоновая подложка строки
             var bg = new AlphaBlendControl(0.35f)
@@ -342,6 +416,36 @@ namespace ClassicUO.MobileUI
                 ButtonParameter = rune.DropButton,
                 IsSelectable = false
             });
+        }
+
+        public override void Update()
+        {
+            base.Update();
+
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (_resizing)
+            {
+                Point offset = Mouse.LDragOffset;
+                if (offset != Point.Zero)
+                {
+                    int w = _startSize.X + offset.X;
+                    int h = _startSize.Y + offset.Y;
+
+                    w = Math.Max(420, Math.Min(MobileUiController.ScreenWidth, w));
+                    h = Math.Max(320, Math.Min(MobileUiController.ScreenHeight, h));
+
+                    if (w != Width || h != Height)
+                    {
+                        Width = w;
+                        Height = h;
+                        OnResize();
+                    }
+                }
+            }
         }
 
         public override void OnButtonClick(int buttonID)
