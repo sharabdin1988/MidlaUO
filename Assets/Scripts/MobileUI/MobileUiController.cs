@@ -263,7 +263,7 @@ namespace ClassicUO.MobileUI
         /// Если рунбук открыт — отправляет ответ серверу сразу.
         /// Если закрыт — открывает рунбук и автоматически отправляет ответ без показа окна.
         /// </summary>
-        public static void TeleportToRune(uint bookSerial, int buttonID, string runeName)
+        internal static void TeleportToRune(uint bookSerial, int buttonID, string runeName)
         {
             var world = ClassicUO.Client.Game.UO.World;
             if (world == null || world.Player == null)
@@ -298,7 +298,7 @@ namespace ClassicUO.MobileUI
         /// Перехват открытия рунбука в PacketHandlers: если был запрос с быстрой кнопки,
         /// сразу отправляем серверу выбор руны и скрываем окно книги.
         /// </summary>
-        public static bool TryHandlePendingTeleport(World world, uint bookSerial, uint gumpID)
+        internal static bool TryHandlePendingTeleport(World world, uint bookSerial, uint gumpID)
         {
             if (_pendingTeleport != null && _pendingTeleport.BookSerial == bookSerial && DateTime.UtcNow < _pendingTeleport.ExpiresAt)
             {
