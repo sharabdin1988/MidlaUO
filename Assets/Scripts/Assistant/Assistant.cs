@@ -693,8 +693,8 @@ namespace ClassicUO.Game.UI.Gumps
         internal static int InsertFriendButton => (int)ButtonType.InsertFriend;
         internal static readonly byte FONT = (byte)(Client.Game.UO.Version >= ClassicUO.Utility.ClientVersion.CV_305D ? 1 : 0);
         //WARNING, MINIMUM WIDTH IS 500, HEIGHT IS 325, if you go lower than this, the items won't fit inside the gump! YOU HAVE BEEN WARNED!
-        private static int _width = 500;
-        private static int _height = 325;
+        private static int _width = 620;
+        private static int _height = 360;
         private static int WIDTH
         {
             get { return _width; }
@@ -1227,12 +1227,14 @@ namespace ClassicUO.Game.UI.Gumps
                         y += _buttonHeight;
                         _searchNewContainers = new AssistCheckbox(0x00D2, 0x00D3, "Search new containers", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y };
                         Add(_searchNewContainers, page);
+                        int sideBtnW = Math.Max(84, devx * 14);
+                        int sideBtnX = (WIDTH >> 1) - sideBtnW - 8;
                         NiceButton button;
-                        Add(button = new NiceButton(x + devx * 32, y, devx * 22, buttondiffy, ButtonAction.Activate, "Exemptions") { IsSelectable = false, ButtonParameter = (int)ButtonType.ExemptionsContSearch }, page);
+                        Add(button = new NiceButton(sideBtnX, y, sideBtnW, buttondiffy, ButtonAction.Activate, "Exemptions") { IsSelectable = false, ButtonParameter = (int)ButtonType.ExemptionsContSearch }, page);
                         y += _buttonHeight;
                         _gauntletBoneCutter = new AssistCheckbox(0x00D2, 0x00D3, "Gauntlet bone cutter", FONT, ScriptTextBox.GRAY_HUE, true) { X = x, Y = y };
                         Add(_gauntletBoneCutter, page);
-                        Add(button = new NiceButton(x + devx * 32, y, devx * 22, buttondiffy, ButtonAction.Activate, "Set Blade") { IsSelectable = false, ButtonParameter = (int)ButtonType.BoneCutSetBlade }, page);
+                        Add(button = new NiceButton(sideBtnX, y, sideBtnW, buttondiffy, ButtonAction.Activate, "Set Blade") { IsSelectable = false, ButtonParameter = (int)ButtonType.BoneCutSetBlade }, page);
                         y += _buttonHeight;
                         Label l = new Label(MobileUiTranslation.Translate("Show Bandage Timer: "), true, ScriptTextBox.GRAY_HUE, font: FONT) { X = x, Y = y };
                         Add(l, page);
