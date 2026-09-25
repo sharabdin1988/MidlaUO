@@ -461,11 +461,17 @@ namespace ClassicUO.MobileUI
                 }
             };
 
-            // Иконка заклинания
+            // Иконка заклинания (клик или перетаскивание на экран)
             ushort iconGraphic = (ushort)(0x08C0 + index);
             var iconPic = new GumpPic(6, y + 2, iconGraphic, 0)
             {
-                AcceptMouseInput = false
+                AcceptMouseInput = true,
+                CanMove = true
+            };
+            int spellIndexForPin = index;
+            iconPic.DragBegin += (s, e) =>
+            {
+                PinSpellToScreen(spellIndexForPin);
             };
             _list.Add(iconPic);
 

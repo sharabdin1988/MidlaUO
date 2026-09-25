@@ -6529,6 +6529,11 @@ namespace ClassicUO.Network
         {
             if (ClassicUO.MobileUI.MobileUiController.Enabled && ClassicUO.MobileUI.MobileRunebookGump.IsRunebook(layout, lines))
             {
+                if (ClassicUO.MobileUI.MobileUiController.TryHandlePendingTeleport(world, sender, gumpID))
+                {
+                    return null;
+                }
+
                 for (LinkedListNode<Gump> node = UIManager.Gumps.First; node != null; node = node.Next)
                 {
                     Control g = node.Value;

@@ -248,6 +248,75 @@ namespace ClassicUO.MobileUI
             }
         }
 
+        private class PendingRuneAction
+        {
+            public uint BookSerial;
+            public int ButtonID;
+            public string RuneName;
+            public DateTime ExpiresAt;
+        }
+
+        private static PendingRuneAction _pendingTeleport;
+
+        /// <summary>
+        /// Быстрый телепорт по руне из экранной кнопки или макроса.
+        /// Если рунбук открыт — отправляет ответ серверу сразу.
+        /// Если закрыт — открывает рунбук и автоматически отправляет ответ без показа окна.
+        /// </summary>
+        public static void TeleportToRune(uint bookSerial, int buttonID, string runeName)
+        {
+            var world = ClassicUO.Client.Game.UO.World;
+            if (world == null || world.Player == null)
+            {
+                return;
+            }
+
+            // 1. Если рунбук открыт прямо сейчас
+            for (var node = UIManager.Gumps.First; node != null; node = node.Next)
+            {
+                if (node.Value is MobileRunebookGump rg && rg.LocalSerial == bookSerial && !rg.IsDisposed)
+                {
+                    GameActions.ReplyGump(bookSerial, rg.ServerGumpID, buttonID);
+                    world.MessageManager?.AddMessage(world.Player, $"[⚡ {runeName}]", 0x0035, ClassicUO.Game.Data.MessageType.Regular, 3, false);
+                    return;
+                }
+            }
+
+            // 2. Если рунбук закрыт — ставим отложенный прыжок и открываем книгу
+            _pendingTeleport = new PendingRuneAction
+            {
+                BookSerial = bookSerial,
+                ButtonID = buttonID,
+                RuneName = runeName,
+                ExpiresAt = DateTime.UtcNow.AddSeconds(5.0)
+            };
+
+            GameActions.DoubleClick(world, bookSerial);
+        }
+
+        /// <summary>
+        /// Перехват открытия рунбука в PacketHandlers: если был запрос с быстрой кнопки,
+        /// сразу отправляем серверу выбор руны и скрываем окно книги.
+        /// </summary>
+        public static bool TryHandlePendingTeleport(World world, uint bookSerial, uint gumpID)
+        {
+            if (_pendingTeleport != null && _pendingTeleport.BookSerial == bookSerial && DateTime.UtcNow < _pendingTeleport.ExpiresAt)
+            {
+                int btn = _pendingTeleport.ButtonID;
+                string name = _pendingTeleport.RuneName;
+                _pendingTeleport = null;
+
+                GameActions.ReplyGump(bookSerial, gumpID, btn);
+                if (world?.Player != null)
+                {
+                    world.MessageManager?.AddMessage(world.Player, $"[⚡ {name}]", 0x0035, ClassicUO.Game.Data.MessageType.Regular, 3, false);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>Сервер прислал содержимое контейнера.</summary>
         public static void OnContainerUpdated()
         {

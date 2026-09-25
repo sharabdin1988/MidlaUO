@@ -359,16 +359,16 @@ namespace ClassicUO.MobileUI
                 $"{rune.Index + 1}.",
                 true,
                 0x0386,
-                30,
+                26,
                 255,
                 FontStyle.BlackBorder)
             {
-                X = 6,
+                X = 4,
                 Y = y + 12
             });
 
             // Название руны
-            int maxNameWidth = Math.Max(100, rowWidth - 330);
+            int maxNameWidth = Math.Max(70, rowWidth - 365);
             _list.Add(new Label(
                 rune.Name,
                 true,
@@ -377,9 +377,23 @@ namespace ClassicUO.MobileUI
                 255,
                 FontStyle.BlackBorder)
             {
-                X = 32,
+                X = 30,
                 Y = y + 12
             });
+
+            // 0. Кнопка «📌» (вынести точку телепорта на экран в виде быстрой кнопки)
+            var btnPin = new NiceButton(rowWidth - 326, y + 6, 32, 32, ButtonAction.Activate, "📌")
+            {
+                IsSelectable = false
+            };
+            btnPin.MouseUp += (s, e) =>
+            {
+                if (e.Button == MouseButtonType.Left)
+                {
+                    PinRuneToScreen(rune);
+                }
+            };
+            _list.Add(btnPin);
 
             // 1. Кнопка «⚡ Заряд» (мгновенный рекол за счёт заряда книги, без затрат маны)
             _list.Add(new NiceButton(rowWidth - 290, y + 6, 76, 32, ButtonAction.Activate, MobileUiController.T("charge_recall"))
@@ -415,6 +429,42 @@ namespace ClassicUO.MobileUI
                 ButtonParameter = rune.DropButton,
                 IsSelectable = false
             });
+        }
+
+        private void PinRuneToScreen(RuneEntry rune)
+        {
+            var world = World;
+            if (world == null)
+            {
+                return;
+            }
+
+            MobileRuneButtonGump existing = null;
+            int count = 0;
+
+            for (LinkedListNode<Gump> node = UIManager.Gumps.First; node != null; node = node.Next)
+            {
+                if (node.Value is MobileRuneButtonGump btn)
+                {
+                    count++;
+                    if (btn.BookSerial == LocalSerial && btn.ButtonID == rune.ChargeButton)
+                    {
+                        existing = btn;
+                    }
+                }
+            }
+
+            if (existing != null)
+            {
+                existing.BringOnTop();
+                return;
+            }
+
+            int screenX = 120 + (count % 3) * 94;
+            int screenY = 180 + (count / 3) * 50;
+
+            var gump = new MobileRuneButtonGump(world, LocalSerial, rune.ChargeButton, rune.Name, screenX, screenY);
+            UIManager.Add(gump);
         }
 
         public override void Update()
