@@ -181,10 +181,9 @@ namespace ClassicUO.MobileUI
             Add(_btnClose);
 
             // Кружочек изменения размера справа внизу над углом (как в главном окне ClassicUO / ResizableGump: 0x837/0x838)
-            _resizeButton = new Button(0, 0x837, 0x838, 0x838)
+            _resizeButton = new Button(203, 0x837, 0x838, 0x838)
             {
-                ButtonAction = ButtonAction.Activate,
-                ButtonParameter = 203
+                ButtonAction = ButtonAction.Activate
             };
 
             if (UnityEngine.Application.isMobilePlatform)
