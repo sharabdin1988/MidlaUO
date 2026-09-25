@@ -13,7 +13,7 @@ namespace ClassicUO.Game.UI.Gumps
     internal class MobileUiSettingsGump : Gump
     {
         private const int Width_ = 450;
-        private const int Height_ = 250;
+        private const int Height_ = 330;
 
         public MobileUiSettingsGump(World world) : base(world, 0, 0)
         {
@@ -124,6 +124,56 @@ namespace ClassicUO.Game.UI.Gumps
                 Y = 132
             });
 
+            // --- размер окон книг (пресеты) ---
+            Add(new Label(
+                ClassicUO.MobileUI.MobileUiController.T("window_size") + ": " + ClassicUO.MobileUI.MobileUiController.GetPresetName(),
+                true,
+                0xFFFF,
+                Width_ - 40,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 24,
+                Y = 160
+            });
+
+            Add(new NiceButton(24, 182, 34, 26, ButtonAction.Activate, "−")
+            {
+                ButtonParameter = 10,
+                IsSelectable = false
+            });
+
+            Add(new NiceButton(62, 182, 34, 26, ButtonAction.Activate, "+")
+            {
+                ButtonParameter = 11,
+                IsSelectable = false
+            });
+
+            // --- масштаб сумок и контейнеров ---
+            Add(new Label(
+                ClassicUO.MobileUI.MobileUiController.T("containers_scale") + ": " + ClassicUO.MobileUI.MobileUiController.ContainerScale + "%",
+                true,
+                0xFFFF,
+                Width_ - 40,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 24,
+                Y = 214
+            });
+
+            Add(new NiceButton(24, 236, 34, 26, ButtonAction.Activate, "−")
+            {
+                ButtonParameter = 20,
+                IsSelectable = false
+            });
+
+            Add(new NiceButton(62, 236, 34, 26, ButtonAction.Activate, "+")
+            {
+                ButtonParameter = 21,
+                IsSelectable = false
+            });
+
             // --- подсказки по книгам и сумкам ---
             Add(new Label(
                 "• " + ClassicUO.MobileUI.MobileUiController.T("books_hint"),
@@ -134,19 +184,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontStyle.BlackBorder)
             {
                 X = 24,
-                Y = 162
-            });
-
-            Add(new Label(
-                "• " + ClassicUO.MobileUI.MobileUiController.T("backpack_hint"),
-                true,
-                0x03B2,
-                Width_ - 48,
-                255,
-                FontStyle.BlackBorder)
-            {
-                X = 24,
-                Y = 184
+                Y = 268
             });
 
             // --- закрыть ---
@@ -187,10 +225,25 @@ namespace ClassicUO.Game.UI.Gumps
 
                     break;
 
-                case 3:
-                    ClassicUO.MobileUI.MobileUiController.OpenBackpack();
+                case 10:
+                    ClassicUO.MobileUI.MobileUiController.PrevWindowPreset();
 
-                    return;
+                    break;
+
+                case 11:
+                    ClassicUO.MobileUI.MobileUiController.NextWindowPreset();
+
+                    break;
+
+                case 20:
+                    ClassicUO.MobileUI.MobileUiController.ChangeContainerScale(-20);
+
+                    break;
+
+                case 21:
+                    ClassicUO.MobileUI.MobileUiController.ChangeContainerScale(20);
+
+                    break;
 
                 case 0:
                 default:

@@ -32,7 +32,7 @@ namespace ClassicUO.MobileUI
         [JsonPropertyName("row_height")]
         public int RowHeight { get; set; } = 44;
 
-        /// <summary>Пресет размера окна: 0 — компактное, 1 — обычное, 2 — широкое.</summary>
+        /// <summary>Пресет размера окна: 0 — компактное, 1 — обычное, 2 — крупное, 3 — максимальное.</summary>
         [JsonPropertyName("window_preset")]
         public int WindowPreset { get; set; } = 1;
 
@@ -73,7 +73,7 @@ namespace ClassicUO.MobileUI
                         config.Enabled = loaded.Enabled;
                         config.ShowButton = loaded.ShowButton;
                         config.RowHeight = loaded.RowHeight > 0 ? loaded.RowHeight : 44;
-                        config.WindowPreset = loaded.WindowPreset < 0 || loaded.WindowPreset > 2 ? 1 : loaded.WindowPreset;
+                        config.WindowPreset = loaded.WindowPreset < 0 || loaded.WindowPreset > 3 ? 1 : loaded.WindowPreset;
                         config.Language = MobileUiStrings.Normalize(loaded.Language);
                     }
                 }

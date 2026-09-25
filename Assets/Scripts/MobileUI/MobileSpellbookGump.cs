@@ -25,12 +25,12 @@ namespace ClassicUO.MobileUI
 {
     internal sealed class MobileSpellbookGump : Gump
     {
-        private const int WinWidth = 560;
-        private const int WinHeight = 450;
+        private int WinWidth => MobileUiController.GetWindowWidth();
+        private int WinHeight => MobileUiController.GetWindowHeight();
+        private int RowHeight => MobileUiController.GetRowHeight();
         private const int HeaderHeight = 44;
         private const int TabsHeight = 36;
         private const int FooterHeight = 34;
-        private const int RowHeight = 52;
 
         private readonly uint _bookSerial;
         private ScrollArea _list;
@@ -91,6 +91,23 @@ namespace ClassicUO.MobileUI
             }
         }
 
+        public void Rebuild()
+        {
+            Clear();
+            Children.Clear();
+
+            if (X + WinWidth > UIManager.Width)
+            {
+                X = Math.Max(0, UIManager.Width - WinWidth);
+            }
+            if (Y + WinHeight > UIManager.Height)
+            {
+                Y = Math.Max(0, UIManager.Height - WinHeight);
+            }
+
+            Build();
+        }
+
         private void Build()
         {
             Add(new ResizePic(0x0A3C)
@@ -124,10 +141,31 @@ namespace ClassicUO.MobileUI
             };
             Add(_summary);
 
-            // Кнопка закрытия [X]
-            Add(new NiceButton(WinWidth - 90, 10, 76, 26, ButtonAction.Activate, MobileUiController.T("close"))
+            // Кнопка уменьшения масштаба [ − ]
+            Add(new NiceButton(WinWidth - 126, 10, 30, 26, ButtonAction.Activate, "−")
+            {
+                ButtonParameter = 201,
+                IsSelectable = false
+            });
+
+            // Кнопка увеличения масштаба [ + ]
+            Add(new NiceButton(WinWidth - 94, 10, 30, 26, ButtonAction.Activate, "+")
+            {
+                ButtonParameter = 202,
+                IsSelectable = false
+            });
+
+            // Кнопка закрытия [ ✕ ]
+            Add(new NiceButton(WinWidth - 62, 10, 52, 26, ButtonAction.Activate, MobileUiController.T("close"))
             {
                 ButtonParameter = 0,
+                IsSelectable = false
+            });
+
+            // Уголок переключения размера внизу справа [ ⇲ ]
+            Add(new NiceButton(WinWidth - 28, WinHeight - 28, 24, 24, ButtonAction.Activate, "⇲")
+            {
+                ButtonParameter = 203,
                 IsSelectable = false
             });
 
@@ -156,31 +194,34 @@ namespace ClassicUO.MobileUI
             int x = 12;
 
             // Вкладка «✈ Быстрые»
-            var btnQuick = new NiceButton(x, y, 92, 26, ButtonAction.Activate, MobileUiController.T("tab_quick"))
+            int quickWidth = WinWidth >= 560 ? 92 : 80;
+            var btnQuick = new NiceButton(x, y, quickWidth, 26, ButtonAction.Activate, MobileUiController.T("tab_quick"))
             {
                 ButtonParameter = 100,
                 IsSelected = _selectedTab == 0
             };
             _tabButtons.Add(btnQuick);
             Add(btnQuick);
-            x += 96;
+            x += quickWidth + 4;
 
             // Вкладки кругов 1..8
+            int circleWidth = WinWidth >= 680 ? 44 : (WinWidth >= 560 ? 35 : 28);
             for (int circle = 1; circle <= 8; circle++)
             {
                 int tabIndex = circle;
-                var btn = new NiceButton(x, y, 35, 26, ButtonAction.Activate, circle.ToString())
+                var btn = new NiceButton(x, y, circleWidth, 26, ButtonAction.Activate, circle.ToString())
                 {
                     ButtonParameter = 100 + tabIndex,
                     IsSelected = _selectedTab == tabIndex
                 };
                 _tabButtons.Add(btn);
                 Add(btn);
-                x += 38;
+                x += circleWidth + 3;
             }
 
             // Вкладка «Все»
-            var btnAll = new NiceButton(x, y, 52, 26, ButtonAction.Activate, MobileUiController.T("tab_all"))
+            int allWidth = WinWidth >= 560 ? 52 : 44;
+            var btnAll = new NiceButton(x, y, allWidth, 26, ButtonAction.Activate, MobileUiController.T("tab_all"))
             {
                 ButtonParameter = 109,
                 IsSelected = _selectedTab == 9
@@ -208,6 +249,24 @@ namespace ClassicUO.MobileUI
                 // Закрыть окно и связанный исходный гумп
                 Source?.Dispose();
                 Dispose();
+                return;
+            }
+
+            if (buttonID == 201)
+            {
+                MobileUiController.PrevWindowPreset();
+                return;
+            }
+
+            if (buttonID == 202)
+            {
+                MobileUiController.NextWindowPreset();
+                return;
+            }
+
+            if (buttonID == 203)
+            {
+                MobileUiController.CycleWindowPreset();
                 return;
             }
 

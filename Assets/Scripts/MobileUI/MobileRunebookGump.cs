@@ -25,11 +25,11 @@ namespace ClassicUO.MobileUI
 {
     internal sealed class MobileRunebookGump : Gump
     {
-        private const int WinWidth = 550;
-        private const int WinHeight = 440;
+        private int WinWidth => MobileUiController.GetWindowWidth();
+        private int WinHeight => MobileUiController.GetWindowHeight();
+        private int RowHeight => MobileUiController.GetRowHeight();
         private const int HeaderHeight = 52;
         private const int FooterHeight = 36;
-        private const int RowHeight = 50;
 
         public struct RuneEntry
         {
@@ -133,6 +133,23 @@ namespace ClassicUO.MobileUI
             }
         }
 
+        public void Rebuild()
+        {
+            Clear();
+            Children.Clear();
+
+            if (X + WinWidth > UIManager.Width)
+            {
+                X = Math.Max(0, UIManager.Width - WinWidth);
+            }
+            if (Y + WinHeight > UIManager.Height)
+            {
+                Y = Math.Max(0, UIManager.Height - WinHeight);
+            }
+
+            Build();
+        }
+
         private void Build()
         {
             Add(new ResizePic(0x0A3C)
@@ -174,16 +191,37 @@ namespace ClassicUO.MobileUI
             });
 
             // Кнопка подзарядки
-            Add(new NiceButton(WinWidth - 210, 12, 90, 26, ButtonAction.Activate, MobileUiController.T("recharge"))
+            Add(new NiceButton(WinWidth - 216, 12, 80, 26, ButtonAction.Activate, MobileUiController.T("recharge"))
             {
                 ButtonParameter = 800,
                 IsSelectable = false
             });
 
+            // Кнопка уменьшения масштаба [ − ]
+            Add(new NiceButton(WinWidth - 130, 12, 30, 26, ButtonAction.Activate, "−")
+            {
+                ButtonParameter = 201,
+                IsSelectable = false
+            });
+
+            // Кнопка увеличения масштаба [ + ]
+            Add(new NiceButton(WinWidth - 96, 12, 30, 26, ButtonAction.Activate, "+")
+            {
+                ButtonParameter = 202,
+                IsSelectable = false
+            });
+
             // Кнопка закрытия [X]
-            Add(new NiceButton(WinWidth - 110, 12, 90, 26, ButtonAction.Activate, MobileUiController.T("close"))
+            Add(new NiceButton(WinWidth - 62, 12, 52, 26, ButtonAction.Activate, MobileUiController.T("close"))
             {
                 ButtonParameter = 0,
+                IsSelectable = false
+            });
+
+            // Уголок переключения размера внизу справа [ ⇲ ]
+            Add(new NiceButton(WinWidth - 28, WinHeight - 28, 24, 24, ButtonAction.Activate, "⇲")
+            {
+                ButtonParameter = 203,
                 IsSelectable = false
             });
 
@@ -257,11 +295,12 @@ namespace ClassicUO.MobileUI
             });
 
             // Название руны
+            int maxNameWidth = Math.Max(100, rowWidth - 330);
             _list.Add(new Label(
                 rune.Name,
                 true,
                 0xFFFF,
-                170,
+                maxNameWidth,
                 255,
                 FontStyle.BlackBorder)
             {
@@ -270,39 +309,62 @@ namespace ClassicUO.MobileUI
             });
 
             // 1. Кнопка «⚡ Заряд» (мгновенный рекол за счёт заряда книги, без затрат маны)
-            _list.Add(new NiceButton(210, y + 6, 76, 32, ButtonAction.Activate, MobileUiController.T("charge_recall"))
+            _list.Add(new NiceButton(rowWidth - 290, y + 6, 76, 32, ButtonAction.Activate, MobileUiController.T("charge_recall"))
             {
                 ButtonParameter = rune.ChargeButton,
                 IsSelectable = false
             });
 
             // 2. Кнопка «Рекол» (каст заклинания Recall)
-            _list.Add(new NiceButton(292, y + 6, 68, 32, ButtonAction.Activate, MobileUiController.T("recall"))
+            _list.Add(new NiceButton(rowWidth - 210, y + 6, 68, 32, ButtonAction.Activate, MobileUiController.T("recall"))
             {
                 ButtonParameter = rune.RecallButton,
                 IsSelectable = false
             });
 
             // 3. Кнопка «Гейт» (каст заклинания Gate Travel)
-            _list.Add(new NiceButton(366, y + 6, 62, 32, ButtonAction.Activate, MobileUiController.T("gate"))
+            _list.Add(new NiceButton(rowWidth - 138, y + 6, 62, 32, ButtonAction.Activate, MobileUiController.T("gate"))
             {
                 ButtonParameter = rune.GateButton,
                 IsSelectable = false
             });
 
             // 4. Кнопка «⭐» (сделать руной по умолчанию)
-            _list.Add(new NiceButton(434, y + 6, 34, 32, ButtonAction.Activate, "⭐")
+            _list.Add(new NiceButton(rowWidth - 72, y + 6, 32, 32, ButtonAction.Activate, "⭐")
             {
                 ButtonParameter = rune.DefaultButton,
                 IsSelectable = false
             });
 
             // 5. Кнопка «⏏» (извлечь руну из книги)
-            _list.Add(new NiceButton(474, y + 6, 34, 32, ButtonAction.Activate, "⏏")
+            _list.Add(new NiceButton(rowWidth - 36, y + 6, 32, 32, ButtonAction.Activate, "⏏")
             {
                 ButtonParameter = rune.DropButton,
                 IsSelectable = false
             });
+        }
+
+        public override void OnButtonClick(int buttonID)
+        {
+            if (buttonID == 201)
+            {
+                MobileUiController.PrevWindowPreset();
+                return;
+            }
+
+            if (buttonID == 202)
+            {
+                MobileUiController.NextWindowPreset();
+                return;
+            }
+
+            if (buttonID == 203)
+            {
+                MobileUiController.CycleWindowPreset();
+                return;
+            }
+
+            base.OnButtonClick(buttonID);
         }
     }
 }

@@ -155,6 +155,96 @@ namespace ClassicUO.MobileUI
             Log.Info($"[MobileUI] язык интерфейса: {Config.Language}");
         }
 
+        public static readonly int[] WidthPresets = { 460, 560, 680, 800 };
+        public static readonly int[] HeightPresets = { 370, 450, 540, 630 };
+        public static readonly int[] RowPresets = { 44, 52, 60, 68 };
+
+        public static int GetWindowWidth() => WidthPresets[Math.Max(0, Math.Min(3, Config?.WindowPreset ?? 1))];
+        public static int GetWindowHeight() => HeightPresets[Math.Max(0, Math.Min(3, Config?.WindowPreset ?? 1))];
+        public static int GetRowHeight() => RowPresets[Math.Max(0, Math.Min(3, Config?.WindowPreset ?? 1))];
+
+        public static string GetPresetName()
+        {
+            int p = Math.Max(0, Math.Min(3, Config?.WindowPreset ?? 1));
+            return T("preset_" + p);
+        }
+
+        public static void NextWindowPreset()
+        {
+            Init();
+            if (Config.WindowPreset < 3)
+            {
+                Config.WindowPreset++;
+                Config.Save();
+                RefreshOpenWindows();
+            }
+        }
+
+        public static void PrevWindowPreset()
+        {
+            Init();
+            if (Config.WindowPreset > 0)
+            {
+                Config.WindowPreset--;
+                Config.Save();
+                RefreshOpenWindows();
+            }
+        }
+
+        public static void CycleWindowPreset()
+        {
+            Init();
+            Config.WindowPreset = (Config.WindowPreset + 1) % 4;
+            Config.Save();
+            RefreshOpenWindows();
+        }
+
+        public static void RefreshOpenWindows()
+        {
+            var spellbooks = new System.Collections.Generic.List<MobileSpellbookGump>();
+            var runebooks = new System.Collections.Generic.List<MobileRunebookGump>();
+
+            for (var node = UIManager.Gumps.First; node != null; node = node.Next)
+            {
+                if (node.Value is MobileSpellbookGump sg && !sg.IsDisposed)
+                {
+                    spellbooks.Add(sg);
+                }
+                else if (node.Value is MobileRunebookGump rg && !rg.IsDisposed)
+                {
+                    runebooks.Add(rg);
+                }
+            }
+
+            foreach (var sg in spellbooks)
+            {
+                sg.Rebuild();
+            }
+            foreach (var rg in runebooks)
+            {
+                rg.Rebuild();
+            }
+        }
+
+        public static int ContainerScale => ClassicUO.Configuration.ProfileManager.CurrentProfile?.ContainersScale ?? 100;
+
+        public static void ChangeContainerScale(int delta)
+        {
+            var profile = ClassicUO.Configuration.ProfileManager.CurrentProfile;
+            if (profile == null)
+            {
+                return;
+            }
+
+            int cur = profile.ContainersScale;
+            int next = Math.Max(100, Math.Min(200, cur + delta));
+            if (next != cur)
+            {
+                profile.ContainersScale = (byte)next;
+                UIManager.ContainerScale = next / 100f;
+            }
+        }
+
         /// <summary>Сервер прислал содержимое контейнера.</summary>
         public static void OnContainerUpdated()
         {

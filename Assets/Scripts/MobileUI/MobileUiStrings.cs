@@ -65,6 +65,14 @@ namespace ClassicUO.MobileUI
             ["mana"]              = new[] { "Мана", "Mana" },
             ["backpack_hint"]     = new[] { "Сумки: нативный вид с Drag & Drop (Опции → Контейнеры)", "Bags: native mode with Drag & Drop (Options → Containers)" },
             ["books_hint"]        = new[] { "Книги заклинаний и рун: крупные сенсорные кнопки", "Books: touch-friendly spellbook & runebook" },
+            ["window_size"]       = new[] { "Размер окон книг", "Books window size" },
+            ["containers_scale"]  = new[] { "Масштаб сумок", "Bags scale" },
+            ["preset_0"]          = new[] { "Компактный (80%)", "Compact (80%)" },
+            ["preset_1"]          = new[] { "Стандартный (100%)", "Standard (100%)" },
+            ["preset_2"]          = new[] { "Крупный (120%)", "Large (120%)" },
+            ["preset_3"]          = new[] { "Максимальный (145%)", "Extra Large (145%)" },
+            ["zoom_in"]           = new[] { "Увеличить (+)", "Zoom In (+)" },
+            ["zoom_out"]          = new[] { "Уменьшить (−)", "Zoom Out (−)" },
         };
 
         public static string Normalize(string language)
