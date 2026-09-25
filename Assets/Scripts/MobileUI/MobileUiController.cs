@@ -276,8 +276,8 @@ namespace ClassicUO.MobileUI
             {
                 if (node.Value is MobileRunebookGump rg && rg.LocalSerial == bookSerial && !rg.IsDisposed)
                 {
-                    GameActions.ReplyGump(bookSerial, rg.ServerGumpID, buttonID);
-                    world.MessageManager?.AddMessage(world.Player, $"[⚡ {runeName}]", 0x0035, ClassicUO.Game.Data.MessageType.Regular, 3, false);
+                    GameActions.ReplyGump(bookSerial, rg.ServerSerial, buttonID);
+                    GameActions.Print(world, $"[⚡ {runeName}]", 0x0035);
                     return;
                 }
             }
@@ -307,10 +307,7 @@ namespace ClassicUO.MobileUI
                 _pendingTeleport = null;
 
                 GameActions.ReplyGump(bookSerial, gumpID, btn);
-                if (world?.Player != null)
-                {
-                    world.MessageManager?.AddMessage(world.Player, $"[⚡ {name}]", 0x0035, ClassicUO.Game.Data.MessageType.Regular, 3, false);
-                }
+                GameActions.Print(world, $"[⚡ {name}]", 0x0035);
                 return true;
             }
 
