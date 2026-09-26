@@ -13,6 +13,17 @@ MonoBehaviour:
   m_Name: SupportedServerConfigurations
   m_EditorClassIdentifier: 
   ServerConfigurations:
+  - Name: midla
+    UoServerUrl: middle-earth.ru
+    UoServerPort: 5005
+    FileDownloadServerUrl: d.midla.ru
+    FileDownloadServerPort: 80
+    ClientVersion: 4.0.0.3
+    UseEncryption: 0
+    ClientPathForUnityEditor: 
+    AllFilesDownloaded: 0
+    PreferExternalStorage: 1
+    SupportedServer: 1
   - Name: Renaissance (supported)
     UoServerUrl: login.uorenaissance.com
     UoServerPort: 2593

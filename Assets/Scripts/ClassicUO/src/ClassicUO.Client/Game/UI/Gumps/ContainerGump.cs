@@ -366,6 +366,7 @@ namespace ClassicUO.Game.UI.Gumps
             _gridResizeButton.MouseDown += (sender, e) =>
             {
                 _gridResizing = true;
+                CanCloseWithRightClick = false;
                 _gridStartSize = new Point(Width, Height);
             };
 
@@ -374,6 +375,7 @@ namespace ClassicUO.Game.UI.Gumps
                 if (_gridResizing)
                 {
                     _gridResizing = false;
+                    CanCloseWithRightClick = true;
                     _gridStartSize = new Point(Width, Height);
                     RequestUpdateContents();
                 }
@@ -847,17 +849,27 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (_gridResizing)
             {
+                if (!Mouse.LButtonPressed)
+                {
+                    _gridResizing = false;
+                    CanCloseWithRightClick = true;
+                    RequestUpdateContents();
+                    return;
+                }
+
                 Point offset = Mouse.LDragOffset;
                 if (offset != Point.Zero)
                 {
                     int w = _gridStartSize.X + offset.X;
                     int h = _gridStartSize.Y + offset.Y;
 
+                    int minW = 280;
+                    int minH = 220;
                     int maxW = ClassicUO.MobileUI.MobileUiController.ScreenWidth;
                     int maxH = ClassicUO.MobileUI.MobileUiController.ScreenHeight;
 
-                    w = Math.Max(320, Math.Min(maxW, w));
-                    h = Math.Max(240, Math.Min(maxH, h));
+                    w = Math.Max(minW, Math.Min(maxW, w));
+                    h = Math.Max(minH, Math.Min(maxH, h));
 
                     if (w != Width || h != Height)
                     {
@@ -1127,6 +1139,11 @@ namespace ClassicUO.Game.UI.Gumps
 
         protected override void CloseWithRightClick()
         {
+            if (_gridResizing)
+            {
+                return;
+            }
+
             base.CloseWithRightClick();
 
             if (_data.ClosedSound != 0)

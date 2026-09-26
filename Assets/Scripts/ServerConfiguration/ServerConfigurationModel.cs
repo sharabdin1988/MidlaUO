@@ -31,7 +31,38 @@ public static class ServerConfigurationModel
     {
         var json = PlayerPrefs.GetString(serverConfigurationsKey, string.Empty);
         ServerConfigurations = string.IsNullOrEmpty(json) == false ? JsonConvert.DeserializeObject<List<ServerConfiguration>>(json) : new List<ServerConfiguration>();
+
+        // Вшиваем сервер Middle-earth (midla.ru) по умолчанию, чтобы не требовалось вводить руками
+        if (ServerConfigurations.All(x => x.UoServerUrl != "middle-earth.ru" && x.Name != "midla"))
+        {
+            var midlaConfig = new ServerConfiguration
+            {
+                Name = "midla",
+                UoServerUrl = "middle-earth.ru",
+                UoServerPort = "5005",
+                FileDownloadServerUrl = "d.midla.ru",
+                FileDownloadServerPort = "80",
+                ClientVersion = "4.0.0.3",
+                UseEncryption = false,
+                ClientPathForUnityEditor = "",
+                AllFilesDownloaded = false,
+                PreferExternalStorage = true,
+                SupportedServer = true
+            };
+            ServerConfigurations.Insert(0, midlaConfig);
+            SaveServerConfigurations();
+        }
+
         DefaultConfiguration = GetDefaultConfiguration();
+        if (DefaultConfiguration == null)
+        {
+            DefaultConfiguration = ServerConfigurations.FirstOrDefault(x => x.UoServerUrl == "middle-earth.ru") ?? ServerConfigurations.FirstOrDefault();
+            if (DefaultConfiguration != null)
+            {
+                PlayerPrefs.SetString(defaultConfigurationNameKey, DefaultConfiguration.Name);
+            }
+        }
+
         SupportedServerConfigurations = new List<ServerConfiguration>(serverConfigurations);
     }
 

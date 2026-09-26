@@ -1,50 +1,87 @@
-# MobileUO
+# MidlaUO — Modern Mobile Client for Ultima Online
 
-MobileUO - the first **mobile** client for Ultima Online!
+<p align="center">
+  <b>Современный сенсорный мобильный клиент Ultima Online для Android на базе Unity и ClassicUO</b><br/>
+  <i>Оптимизирован для игры на шарде Middle-earth (middle-earth.ru:5005) и любых других серверах UO</i>
+</p>
 
-MobileUO runs on **iOS & Android** and enables you to play UO on the go.
+---
 
-<a href='https://play.google.com/store/apps/details?id=com.mobileuo.mobileuo&pcampaignid=pcampaignidMKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img height='60' alt='Get it on Google Play' src='https://raw.githubusercontent.com/VoxelBoy/MobileUO/master/docs/images/playStoreBadge.png'/></a>
-<a href='https://apps.apple.com/us/app/id1511721667'><img height='60' alt='Download on the App Store' src='https://raw.githubusercontent.com/VoxelBoy/MobileUO/master/docs/images/appStoreBadge.png'/></a>
+## 📥 Скачать APK (Download Latest Release)
 
-**Join the community**
+* 📦 **[Скачать актуальный APK MidlaUO (GitHub Releases)](https://github.com/sharabdin1988/MidlaUO/releases)**
+* Пакет: `net.midla.uo`
+* Поддерживаемые архитектуры: ARM64 (v8a), Android 7.0–17+
+* Аппаратное ускорение: **Vulkan API** / **OpenGL ES 3.2** (многопоточный рендеринг 60 / 90 / 120 FPS)
 
-<a href="https://discord.gg/d6NQsj3">
-<img src="https://img.shields.io/discord/687638336482836481?logo=discord"
-alt="chat on Discord"></a>
+---
 
-<img src="https://raw.githubusercontent.com/VoxelBoy/MobileUO/master/docs/images/MobileUOGitHubCover.png"/>
+## ✨ Основные особенности (Features)
 
-# How to Play?
-Follow the instructions on the [Wiki](https://github.com/VoxelBoy/MobileUO/wiki) to install and configure MobileUO for your mobile device.
+### 🎒 1. Инвентарь-сетка (Diablo-style Grid Inventory)
+* **Мгновенное переключение видов**: кнопка `[ ⊞ Сетка ]` в классической сумке и `[ 🎒 Классика ]` в окне сетки.
+* **Сенсорные ячейки 54×54 px**: крупный размер под подушечку пальца, мягкая контрастная подложка и подсветка при наведении/выборе.
+* **Перетаскивание и рокировка (Drag & Drop + Swap)**:
+  * Перемещение вещей в свободные слоты;
+  * Обмен местами (Swap) двух предметов при перетаскивании друг на друга;
+  * Автоматическое объединение стакающихся предметов (монеты, стрелы, бинты).
+* **Авто-сортировка `[ ⚡ Сорт ]`**: в один клик раскладывает содержимое сумки по категориям:
+  1. Золото и валюта
+  2. Оружие
+  3. Доспехи и щиты
+  4. Одежда и украшения
+  5. Зелья и бинты
+  6. Книги заклинаний, рунбуки, руны и свитки
+  7. Реагенты
+  8. Инструменты и отмычки
+  9. Вложенные контейнеры
+* **Двойной тап**: моментальное использование предмета (выпить зелье, надеть вещь, открыть мешочек).
+* **Плавное изменение размера окна**: кружок ресайза `0x0837` в правом нижнем углу позволяет свободно масштабировать сумку по ширине и высоте.
 
-# See it in action
+---
 
-Click to play the video
+### 📖 2. Сенсорная книга заклинаний (Spellbook) и Книга рун (Runebook)
+* **Крупные кнопки**: фильтры по кругам магии (Круги 1–8), вкладка «✈ Быстрые» (Recall, Gate, Greater Heal, Cure, Bless...) и общий список.
+* **Вынос заклинаний на игровой экран (HUD)**:
+  * Кнопка `[ + Экран ]` или простое перетаскивание иконки заклинания пальцем прямо на игровое поле.
+* **Вынос точек телепорта из Рунбука**:
+  * Кнопка `[ 📌 ]` напротив любой руны создаёт магнитную кнопку `[ ⚡ Название ]` на экране.
+  * **Телепорт в 1 тап**: нажатие на кнопку мгновенно использует заряд книги рун без открытия окна рунбука!
+* **Магнитная стыковка (Anchorable Buttons)**: кнопки заклинаний, рун, навыков и макросов автоматически «магнитятся» друг к другу, образуя аккуратную компактную панель быстрого доступа у края экрана.
 
-[![MobileUO Renaissance capture](https://raw.githubusercontent.com/VoxelBoy/MobileUO/master/docs/images/MobileUORenaissanceCaptureVideoThumbnail.png)](http://www.youtube.com/watch?v=fT_gdb_X9oc "MobileUO - UO Renaissance capture")
+---
 
-# Legal
+### 🇷🇺 3. Полная русская локализация
+* **Настройки клиента и мобильное меню**: полностью переведены на русский язык с возможностью мгновенного переключения `RU ⇄ EN`.
+* **Встроенный Ассистент (UOScript / AssistUO / UOSteam)**:
+  * Полный перевод вкладок: *Общие*, *Опции*, *Горячие клавиши*, *Макросы*, *Агенты* (Автолут, Переодевание, Организатор, Скавенджер);
+  * Лаконичные и понятные игровые термины без наложения текста и вылезания за границы кнопок.
 
-MobileUO is an open-source Ultima Online client built using Unity
-and derived in part from the ClassicUO project.
+---
 
-* [ClassicUO](https://github.com/andreakarasho/ClassicUO)
+### 🏰 4. Встроенный сервер Middle-earth (midla.ru)
+* Шард **Middle-earth (`middle-earth.ru:5005`)** уже преднастроен в списке серверов по умолчанию при первом входе.
+* Новым игрокам не нужно вводить IP и порт вручную — достаточно запустить клиент и ввести логин/пароль своего аккаунта.
 
-# Licensing
+---
 
-MobileUO is licensed under the GNU Affero General Public License v3 (AGPLv3).
+### ⚡ 5. Аппаратное ускорение и производительность
+* Графический стек Unity скомпилирован с поддержкой **Vulkan API** и **OpenGL ES 3.2**.
+* Включён многопоточный рендеринг (`mobileMTRendering`), снижающий нагрузку на CPU и обеспечивающий максимальную автономность и плавность 60–120 FPS на современных процессорах (Google Tensor, Snapdragon, MediaTek, Exynos).
 
-This project contains source code derived from the ClassicUO project,
-which is licensed under the BSD 2-Clause License. Files originating
-from ClassicUO retain their original copyright notices and BSD license.
+---
 
-# Game Assets
+## 🛠 Сборка из исходников (Building from Source)
 
-This project does not distribute any copyrighted Ultima Online
-game assets. In order to run this client, you must legally obtain
-a copy of the Ultima Online Classic Client. Using a custom client
-to connect to official UO servers is strictly forbidden. 
-We do not assume any responsibility of the usage of this client.
+Проект использует автоматическую CI-сборку на базе GitHub Actions (`.github/workflows/build.yml`):
+* Сборка инициируется через `workflow_dispatch` с указанием ветки и профиля.
+* Артефакт APK подписывается и доступен для скачивания в каждом успешном прогоне Actions или во вкладке Releases.
 
-Ultima Online(R) © 2020 Electronic Arts Inc. All Rights Reserved.
+---
+
+## 📜 Лицензия (License)
+
+* MidlaUO основан на проектах [MobileUO](https://github.com/VoxelBoy/MobileUO) и [ClassicUO](https://github.com/andreakarasho/ClassicUO).
+* Исходный код распространяется под лицензией **GNU Affero General Public License v3 (AGPLv3)**.
+* Компоненты ClassicUO лицензированы под **BSD 2-Clause License**.
+* Ultima Online(R) © Electronic Arts Inc.
