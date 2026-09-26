@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BSD-2-Clause
 // MidlaUO: модуль распознавания речи (Voice-to-Text / Speech-to-Text) для Android
 //
-// Использует системный android.speech.SpeechRecognizer.
+// Использует нативный вспомогательный класс net.midla.uo.VoiceRecognizerHelper.
 // На современных устройствах (Pixel 7 и Android 12+) работает нативно прямо на процессоре (on-device offline STT),
 // на более старых устройствах (Android 7.0–11) использует быстрый системный облачный сервис Google.
 
@@ -35,8 +35,7 @@ namespace ClassicUO.MobileUI
         private static readonly ConcurrentQueue<Action> _mainThreadQueue = new ConcurrentQueue<Action>();
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        private static AndroidJavaObject _speechRecognizer;
-        private static SpeechRecognitionListener _listener;
+        private static VoiceCallbackProxy _callbackProxy;
 #endif
 
         public static void Enqueue(Action action)
@@ -69,14 +68,14 @@ namespace ClassicUO.MobileUI
             {
                 using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
                 using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
-                using (var speechClass = new AndroidJavaClass("android.speech.SpeechRecognizer"))
+                using (var helper = new AndroidJavaClass("net.midla.uo.VoiceRecognizerHelper"))
                 {
-                    return speechClass.CallStatic<bool>("isRecognitionAvailable", activity);
+                    return helper.CallStatic<bool>("isAvailable", activity);
                 }
             }
             catch (Exception ex)
             {
-                Log.Warn($"[VoiceInput] isRecognitionAvailable error: {ex.Message}");
+                Log.Warn($"[VoiceInput] isAvailable error: {ex.Message}");
                 return false;
             }
 #else
@@ -87,7 +86,6 @@ namespace ClassicUO.MobileUI
         public static bool HasMicrophonePermission()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            // Dummy-обращение к Microphone гарантирует включение разрешения RECORD_AUDIO в манифест при сборке Unity
             try { var dummy = UnityEngine.Microphone.devices; } catch { }
             return UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Microphone);
 #else
@@ -178,54 +176,25 @@ namespace ClassicUO.MobileUI
             {
                 using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
                 using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var helper = new AndroidJavaClass("net.midla.uo.VoiceRecognizerHelper"))
                 {
-                    activity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
-                    {
-                        try
-                        {
-                            if (_speechRecognizer == null)
-                            {
-                                using (var speechClass = new AndroidJavaClass("android.speech.SpeechRecognizer"))
-                                {
-                                    _speechRecognizer = speechClass.CallStatic<AndroidJavaObject>("createSpeechRecognizer", activity);
-                                    _listener = new SpeechRecognitionListener();
-                                    _speechRecognizer.Call("setRecognitionListener", _listener);
-                                }
-                            }
-
-                            using (var intent = new AndroidJavaObject("android.content.Intent", "android.speech.action.RECOGNIZE_SPEECH"))
-                            {
-                                intent.Call<AndroidJavaObject>("putExtra", "android.speech.extra.LANGUAGE_MODEL", "free_form");
-                                string lang = MobileUiTranslation.IsRussian ? "ru-RU" : "en-US";
-                                intent.Call<AndroidJavaObject>("putExtra", "android.speech.extra.LANGUAGE", lang);
-                                intent.Call<AndroidJavaObject>("putExtra", "android.speech.extra.PARTIAL_RESULTS", false);
-                                intent.Call<AndroidJavaObject>("putExtra", "android.speech.extra.MAX_RESULTS", 3);
-
-                                _speechRecognizer.Call("startListening", intent);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Enqueue(() =>
-                            {
-                                IsListening = false;
-                                CurrentState = VoiceState.Error;
-                                StateChanged?.Invoke(CurrentState);
-                                GameActions.Print(world, MobileUiController.T("voice_error") + ": " + ex.Message, 0x22);
-                            });
-                        }
-                    }));
+                    _callbackProxy ??= new VoiceCallbackProxy();
+                    string lang = MobileUiTranslation.IsRussian ? "ru-RU" : "en-US";
+                    helper.CallStatic("start", activity, lang, _callbackProxy);
                 }
             }
             catch (Exception ex)
             {
+                Log.Error($"[VoiceInput] StartListening error: {ex}");
                 IsListening = false;
                 CurrentState = VoiceState.Error;
                 StateChanged?.Invoke(CurrentState);
-                GameActions.Print(world, MobileUiController.T("voice_error") + ": " + ex.Message, 0x22);
+                if (world != null)
+                {
+                    GameActions.Print(world, MobileUiController.T("voice_error") + ": " + ex.Message, 0x22);
+                }
             }
 #else
-            // Симуляция в Unity Editor для тестов
             Enqueue(() =>
             {
                 GameActions.Print(world, "[Голос]: симуляция речи...", 0x35);
@@ -246,20 +215,15 @@ namespace ClassicUO.MobileUI
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
-                using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var helper = new AndroidJavaClass("net.midla.uo.VoiceRecognizerHelper"))
                 {
-                    activity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
-                    {
-                        try
-                        {
-                            _speechRecognizer?.Call("stopListening");
-                        }
-                        catch { }
-                    }));
+                    helper.CallStatic("stop");
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Warn($"[VoiceInput] Stop error: {ex.Message}");
+            }
 #endif
         }
 
@@ -272,20 +236,15 @@ namespace ClassicUO.MobileUI
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
-                using (var player = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-                using (var activity = player.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var helper = new AndroidJavaClass("net.midla.uo.VoiceRecognizerHelper"))
                 {
-                    activity.Call("runOnUiThread", new AndroidJavaRunnable(() =>
-                    {
-                        try
-                        {
-                            _speechRecognizer?.Call("cancel");
-                        }
-                        catch { }
-                    }));
+                    helper.CallStatic("cancel");
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Log.Warn($"[VoiceInput] Cancel error: {ex.Message}");
+            }
 #endif
         }
 
@@ -391,33 +350,13 @@ namespace ClassicUO.MobileUI
             GameActions.Print(world, $"[🎤 {finalCommand}]", 0x35);
         }
 
-        private static void HandleError(int error)
-        {
-            var world = ClassicUO.Client.Game.UO.World;
-            if (world == null) return;
-
-            switch (error)
-            {
-                case 6: // ERROR_SPEECH_TIMEOUT
-                case 7: // ERROR_NO_MATCH
-                    // Тихо завершаем, если игрок промолчал
-                    break;
-                case 9: // ERROR_INSUFFICIENT_PERMISSIONS
-                    GameActions.Print(world, MobileUiController.T("voice_no_mic_perm"), 0x22);
-                    break;
-                default:
-                    Log.Warn($"[VoiceInput] Speech recognizer error code: {error}");
-                    break;
-            }
-        }
-
 #if UNITY_ANDROID && !UNITY_EDITOR
-        private class SpeechRecognitionListener : AndroidJavaProxy
+        private class VoiceCallbackProxy : AndroidJavaProxy
         {
-            public SpeechRecognitionListener() : base("android.speech.RecognitionListener") { }
+            public VoiceCallbackProxy() : base("net.midla.uo.VoiceRecognizerHelper$Callback") { }
 
             [UnityEngine.Scripting.Preserve]
-            public void onReadyForSpeech(AndroidJavaObject @params)
+            public void onReady()
             {
                 Enqueue(() =>
                 {
@@ -428,7 +367,7 @@ namespace ClassicUO.MobileUI
             }
 
             [UnityEngine.Scripting.Preserve]
-            public void onBeginningOfSpeech()
+            public void onBeginning()
             {
                 Enqueue(() =>
                 {
@@ -436,12 +375,6 @@ namespace ClassicUO.MobileUI
                     StateChanged?.Invoke(CurrentState);
                 });
             }
-
-            [UnityEngine.Scripting.Preserve]
-            public void onRmsChanged(float rmsdB) { }
-
-            [UnityEngine.Scripting.Preserve]
-            public void onBufferReceived(byte[] buffer) { }
 
             [UnityEngine.Scripting.Preserve]
             public void onEndOfSpeech()
@@ -454,39 +387,8 @@ namespace ClassicUO.MobileUI
             }
 
             [UnityEngine.Scripting.Preserve]
-            public void onError(int error)
+            public void onResults(string text)
             {
-                Enqueue(() =>
-                {
-                    IsListening = false;
-                    CurrentState = VoiceState.Idle;
-                    StateChanged?.Invoke(CurrentState);
-                    HandleError(error);
-                });
-            }
-
-            [UnityEngine.Scripting.Preserve]
-            public void onResults(AndroidJavaObject results)
-            {
-                string text = null;
-
-                try
-                {
-                    var matches = results.Call<AndroidJavaObject>("getStringArrayList", "results_recognition");
-                    if (matches != null)
-                    {
-                        int size = matches.Call<int>("size");
-                        if (size > 0)
-                        {
-                            text = matches.Call<string>("get", 0);
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Warn($"[VoiceInput] onResults parsing error: {ex.Message}");
-                }
-
                 Enqueue(() =>
                 {
                     IsListening = false;
@@ -501,10 +403,30 @@ namespace ClassicUO.MobileUI
             }
 
             [UnityEngine.Scripting.Preserve]
-            public void onPartialResults(AndroidJavaObject partialResults) { }
+            public void onError(int errorCode, string errorMessage)
+            {
+                Enqueue(() =>
+                {
+                    IsListening = false;
 
-            [UnityEngine.Scripting.Preserve]
-            public void onEvent(int eventType, AndroidJavaObject @params) { }
+                    // Если таймаут ожидания речи или речь не распознана (игрок просто нажал и промолчал)
+                    if (errorCode == 6 || errorCode == 7) // ERROR_SPEECH_TIMEOUT, ERROR_NO_MATCH
+                    {
+                        CurrentState = VoiceState.Idle;
+                        StateChanged?.Invoke(CurrentState);
+                        return;
+                    }
+
+                    CurrentState = VoiceState.Error;
+                    StateChanged?.Invoke(CurrentState);
+
+                    var world = ClassicUO.Client.Game.UO.World;
+                    if (world != null)
+                    {
+                        GameActions.Print(world, $"[🎤 {errorMessage}]", 0x22);
+                    }
+                });
+            }
         }
 #endif
     }

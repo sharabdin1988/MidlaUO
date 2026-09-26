@@ -283,3 +283,16 @@ rm -rf /data/debian/tmp/midla
   - В билде 35 в файл `Assets/Plugins/Android/AndroidManifest.xml` было добавлено разрешение `RECORD_AUDIO`, но отсутствовал тег `<activity>` с фильтром `android.intent.category.LAUNCHER`;
   - Unity при обнаружении кастомного `AndroidManifest.xml` использует его структуру и не сгенерировала активность `UnityPlayerActivity`. В итоге APK устанавливался в систему, но Android не показывал иконку в списке приложений (не было `launchable-activity`);
   - В `Assets/Plugins/Android/AndroidManifest.xml` добавлен полный блок `<activity android:name="com.unity3d.player.UnityPlayerActivity">` со стандартным фильтром `android.intent.action.MAIN` и `android.intent.category.LAUNCHER`.
+
+#### 8. Внедрение нативного VoiceRecognizerHelper.java и декларация queries
+- **Причина ошибки «Ошибка» при голосовом вводе**:
+  1. В `AndroidManifest.xml` отсутствовал блок `<queries>`, без которого на Android 11+ (API 30+) система блокирует доступ к сторонним службам распознавания речи (`RecognitionService` в пакетах Google). Из-за этого `SpeechRecognizer.createSpeechRecognizer()` возвращал null или не мог привязаться к сервису;
+  2. Вызов `putExtra` через динамическое JNI-отражение (`AndroidJavaObject`) приводил к несоответствию типов между примитивными типами Java (`boolean`, `int`) и автобоксингом C#;
+  3. `AndroidJavaProxy` при вызове сложных интерфейсов `RecognitionListener` со структурами `Bundle` мог бросать внутренние JNI-исключения.
+- **Исправление**:
+  - Написан чистый Java-помощник `Assets/Plugins/Android/VoiceRecognizerHelper.java`, который компилируется прямо в APK:
+    - Создание и управление `SpeechRecognizer` выполняется строго на Android UI-потоке (`Looper.getMainLooper()`);
+    - Все события слушателя (`onReadyForSpeech`, `onResults`, `onError` и т.д.) обрабатываются нативно в Java;
+    - Все коды ошибок транслируются в понятные русскоязычные сообщения;
+  - В `AndroidManifest.xml` добавлен блок `<queries>` для `android.speech.RecognitionService` и `android.speech.action.RECOGNIZE_SPEECH`;
+  - В `MobileVoiceInput.cs` интеграция переписана на легковесный типизированный прокси к `VoiceRecognizerHelper.java`.
