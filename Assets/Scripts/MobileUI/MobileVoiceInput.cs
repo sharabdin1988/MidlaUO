@@ -25,7 +25,7 @@ namespace ClassicUO.MobileUI
         Error
     }
 
-    public static class MobileVoiceInput
+    internal static class MobileVoiceInput
     {
         public static bool IsListening { get; private set; }
         public static VoiceState CurrentState { get; private set; } = VoiceState.Idle;
@@ -113,16 +113,18 @@ namespace ClassicUO.MobileUI
 #endif
         }
 
-        public static void StartListening(World world)
+        public static void StartListening(World world = null)
         {
             if (IsListening)
             {
                 return;
             }
 
+            world ??= ClassicUO.Client.Game.UO.World;
+
             if (!IsRecognitionAvailable())
             {
-                GameActions.Print(world, MobileUiController.T("voice_no_support"), 0x22);
+                if (world != null) GameActions.Print(world, MobileUiController.T("voice_no_support"), 0x22);
                 return;
             }
 
@@ -136,7 +138,7 @@ namespace ClassicUO.MobileUI
                     }
                     else
                     {
-                        GameActions.Print(world, MobileUiController.T("voice_no_mic_perm"), 0x22);
+                        if (world != null) GameActions.Print(world, MobileUiController.T("voice_no_mic_perm"), 0x22);
                     }
                 });
                 return;
