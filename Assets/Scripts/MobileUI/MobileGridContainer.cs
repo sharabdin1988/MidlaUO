@@ -33,7 +33,7 @@ namespace ClassicUO.MobileUI
     /// Хранит соответствие (ItemSerial -> SlotIndex) для каждого открытого контейнера.
     /// Переводит индекс слота в координаты (X, Y) контейнера и обратно.
     /// </summary>
-    public static class MobileGridSlotManager
+    internal static class MobileGridSlotManager
     {
         // ContainerSerial -> (ItemSerial -> SlotIndex)
         private static readonly Dictionary<uint, Dictionary<uint, int>> _containerSlots =
@@ -141,7 +141,7 @@ namespace ClassicUO.MobileUI
     /// <summary>
     /// Авто-сортировщик инвентаря по категориям в стиле RPG (золото, оружие, броня, зелья, свитки, реагенты...).
     /// </summary>
-    public static class MobileGridSorter
+    internal static class MobileGridSorter
     {
         public static int GetCategory(Item item)
         {
