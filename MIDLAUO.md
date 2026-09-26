@@ -277,3 +277,9 @@ rm -rf /data/debian/tmp/midla
   1. В скомпилированном APK отсутствовало разрешение `android.permission.RECORD_AUDIO` (Unity не добавляла его в манифест без кастомного `AndroidManifest.xml` или вызова класса `Microphone`). Из-за этого Android молча блокировал доступ к микрофону;
   2. Добавлен `Assets/Plugins/Android/AndroidManifest.xml` с явным декларированием `<uses-permission android:name="android.permission.RECORD_AUDIO" />` и dummy-обращение к `UnityEngine.Microphone.devices`;
   3. В `MobileVoiceButtonGump.cs` переписано распознавание тапа и Push-to-Talk: вместо `Mouse.LDragOffset` (который сбрасывался в `(0, 0)` до вызова `OnMouseUp`) сохраняется исходная координата тача `_mouseDownPos`, гарантируя надёжное срабатывание на любом сенсорном экране.
+
+#### 7. Восстановление Launcher Activity в AndroidManifest.xml
+- **Причина пропажи игры из лаунчера**:
+  - В билде 35 в файл `Assets/Plugins/Android/AndroidManifest.xml` было добавлено разрешение `RECORD_AUDIO`, но отсутствовал тег `<activity>` с фильтром `android.intent.category.LAUNCHER`;
+  - Unity при обнаружении кастомного `AndroidManifest.xml` использует его структуру и не сгенерировала активность `UnityPlayerActivity`. В итоге APK устанавливался в систему, но Android не показывал иконку в списке приложений (не было `launchable-activity`);
+  - В `Assets/Plugins/Android/AndroidManifest.xml` добавлен полный блок `<activity android:name="com.unity3d.player.UnityPlayerActivity">` со стандартным фильтром `android.intent.action.MAIN` и `android.intent.category.LAUNCHER`.
