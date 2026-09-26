@@ -35,6 +35,9 @@ public static class ServerConfigurationModel
         // Вшиваем сервер Middle-earth (midla.ru) по умолчанию, чтобы не требовалось вводить руками
         if (ServerConfigurations.All(x => x.UoServerUrl != "middle-earth.ru" && x.Name != "midla"))
         {
+            string midlaPath = Path.Combine(Init.ExternalStoragePath ?? Application.persistentDataPath, "midla");
+            bool hasFiles = Directory.Exists(midlaPath) && File.Exists(Path.Combine(midlaPath, "anim.mul"));
+
             var midlaConfig = new ServerConfiguration
             {
                 Name = "midla",
@@ -45,7 +48,7 @@ public static class ServerConfigurationModel
                 ClientVersion = "4.0.0.3",
                 UseEncryption = false,
                 ClientPathForUnityEditor = "",
-                AllFilesDownloaded = false,
+                AllFilesDownloaded = hasFiles,
                 PreferExternalStorage = true,
                 SupportedServer = true
             };

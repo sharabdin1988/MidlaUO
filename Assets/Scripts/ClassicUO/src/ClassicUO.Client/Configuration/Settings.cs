@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.IO;
@@ -48,7 +48,7 @@ namespace ClassicUO.Configuration
 
         [JsonPropertyName("clientversion")] public string ClientVersion { get; set; } = string.Empty;
 
-        [JsonPropertyName("lang")] public string Language { get; set; } = "";
+        [JsonPropertyName("lang")] public string Language { get; set; } = "RUS";
 
         [JsonPropertyName("lastservernum")] public ushort LastServerNum { get; set; } = 1;
 

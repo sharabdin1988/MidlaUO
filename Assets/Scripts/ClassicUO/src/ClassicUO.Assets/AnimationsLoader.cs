@@ -211,6 +211,7 @@ namespace ClassicUO.Assets
             }
 
             ProcessEquipConvDef();
+            ProcessBodyConvDef(BodyConvFlags.Anim1 | BodyConvFlags.Anim2 | BodyConvFlags.Anim3 | BodyConvFlags.Anim4 | BodyConvFlags.Anim5);
             ProcessBodyDef();
             ProcessCorpseDef();
         }
@@ -601,6 +602,13 @@ namespace ClassicUO.Assets
                 return;
             }
 
+            // На кастомных шардах (Middle-earth и др.) пакет 0xB9 может не отправляться или содержать 0.
+            // Если флаги пусты, но файлы anim2..anim5 присутствуют — разрешаем их использование.
+            if (flags == 0)
+            {
+                flags = BodyConvFlags.Anim1 | BodyConvFlags.Anim2 | BodyConvFlags.Anim3 | BodyConvFlags.Anim4 | BodyConvFlags.Anim5;
+            }
+
             var file = FileManager.GetUOFilePath("Bodyconv.def");
 
             if (!File.Exists(file))
@@ -976,6 +984,12 @@ namespace ClassicUO.Assets
         {
             if (fileIndex == 1) // anim2
             {
+                // Расовые гуманоидные тела Middle-earth (32..57) имеют человеческую структуру анимаций и носят экипировку
+                if (graphic >= 32 && graphic <= 57)
+                {
+                    return AnimationGroupsType.Human;
+                }
+
                 return graphic < 200 ? AnimationGroupsType.Monster : AnimationGroupsType.Animal;
             }
 

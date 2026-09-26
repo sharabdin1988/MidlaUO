@@ -18,7 +18,7 @@ namespace ClassicUO.MobileUI
     {
         /// <summary>Мобильный интерфейс включён.</summary>
         [JsonPropertyName("enabled")]
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = true;
 
         /// <summary>Язык интерфейса: "ru" или "en".</summary>
         [JsonPropertyName("language")]

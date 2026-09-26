@@ -157,7 +157,12 @@ namespace ClassicUO.Game.GameObjects
             || Graphic == 0x03E2
             || Graphic == 0x02E8
             || Graphic == 0x02E9
-            || Graphic == 0x04E5;
+            || Graphic == 0x04E5
+            // Кастомные расы Middle-earth (эльфы, гномы, орки, гоблины и др.): 750..789, 190, 191, 605, 606
+            || Graphic >= 750 && Graphic <= 789
+            || Graphic == 190 || Graphic == 191
+            || Graphic == 605 || Graphic == 606
+            || (Client.Game?.UO?.Animations != null && Client.Game.UO.Animations.GetAnimType(Graphic) == AnimationGroupsType.Human);
 
         public bool IsGargoyle =>
             Client.Game.UO.Version >= ClientVersion.CV_7000 && Graphic == 0x029A || Graphic == 0x029B;
