@@ -78,6 +78,13 @@ namespace ClassicUO.MobileUI
             ["preset_3"]          = new[] { "Максимальный (145%)", "Extra Large (145%)" },
             ["zoom_in"]           = new[] { "Увеличить (+)", "Zoom In (+)" },
             ["zoom_out"]          = new[] { "Уменьшить (−)", "Zoom Out (−)" },
+            ["voice_button"]      = new[] { "Голосовой ввод", "Voice Input" },
+            ["voice_listening"]   = new[] { "Слушаю...", "Listening..." },
+            ["voice_ready"]       = new[] { "Говорите...", "Speak now..." },
+            ["voice_hint"]        = new[] { "Нажми или зажми для речи", "Tap or hold to speak" },
+            ["voice_no_support"]  = new[] { "Служба распознавания речи недоступна на этом устройстве", "Speech recognition not available on this device" },
+            ["voice_no_mic_perm"] = new[] { "Требуется разрешение на использование микрофона", "Microphone permission required" },
+            ["voice_error"]       = new[] { "Ошибка распознавания речи", "Speech recognition error" },
         };
 
         public static string Normalize(string language)

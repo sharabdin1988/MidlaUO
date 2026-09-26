@@ -13,7 +13,7 @@ namespace ClassicUO.Game.UI.Gumps
     internal class MobileUiSettingsGump : Gump
     {
         private const int Width_ = 450;
-        private const int Height_ = 380;
+        private const int Height_ = 440;
 
         public MobileUiSettingsGump(World world) : base(world, 0, 0)
         {
@@ -209,6 +209,41 @@ namespace ClassicUO.Game.UI.Gumps
                 Y = 296
             });
 
+            // --- голосовой ввод: кнопка микрофона на экране ---
+            bool isVoiceOn = cfg?.ShowVoiceButton ?? true;
+            string voiceText = ClassicUO.MobileUI.MobileUiController.T("voice_button") + ": " +
+                               ClassicUO.MobileUI.MobileUiController.T(isVoiceOn ? on : off);
+            Add(new Label(
+                voiceText,
+                true,
+                0xFFFF,
+                Width_ - 40,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 24,
+                Y = 328
+            });
+
+            Add(new Button(40, 0x0481, 0x0482, 0x0483)
+            {
+                X = 24,
+                Y = 350,
+                ButtonAction = ButtonAction.Activate
+            });
+
+            Add(new Label(
+                ClassicUO.MobileUI.MobileUiController.T("hint_switch"),
+                true,
+                0x03B2,
+                Width_ - 40,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 66,
+                Y = 356
+            });
+
             // --- подсказки по книгам и сумкам ---
             Add(new Label(
                 "• " + ClassicUO.MobileUI.MobileUiController.T("books_hint"),
@@ -219,7 +254,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontStyle.BlackBorder)
             {
                 X = 24,
-                Y = 328
+                Y = 388
             });
 
             // --- закрыть ---
@@ -282,6 +317,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case 30:
                     ClassicUO.MobileUI.MobileUiController.ToggleGridContainers();
+
+                    break;
+
+                case 40:
+                    ClassicUO.MobileUI.MobileUiController.ToggleVoiceButton();
 
                     break;
 

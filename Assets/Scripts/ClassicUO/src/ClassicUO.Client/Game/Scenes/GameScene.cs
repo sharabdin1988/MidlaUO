@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Collections.Generic;
@@ -721,6 +721,9 @@ namespace ClassicUO.Game.Scenes
             SelectedObject.TranslatedMousePositionByViewport = Camera.MouseToWorldPosition();
 
             base.Update();
+
+            // MidlaUO: диспетчеризация распознавания речи из Android UI thread в поток игры
+            ClassicUO.MobileUI.MobileVoiceInput.Update();
 
             if (_time_cleanup < Time.Ticks)
             {

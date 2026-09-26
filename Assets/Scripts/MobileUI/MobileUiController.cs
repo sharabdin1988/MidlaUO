@@ -107,6 +107,8 @@ namespace ClassicUO.MobileUI
         /// <summary>Показать экранную кнопку, если её ещё нет.</summary>
         public static void EnsureButton()
         {
+            EnsureVoiceButton();
+
             if (Config == null || !Config.ShowButton)
             {
                 return;
@@ -126,6 +128,52 @@ namespace ClassicUO.MobileUI
 
             UIManager.Add(new MobileUiButtonGump(world));
             Log.Info("[MobileUI] кнопка добавлена");
+        }
+
+        /// <summary>Показать экранную кнопку голосового ввода, если она включена.</summary>
+        public static void EnsureVoiceButton()
+        {
+            if (Config == null || !Config.ShowVoiceButton)
+            {
+                return;
+            }
+
+            var world = ClassicUO.Client.Game.UO.World;
+
+            if (world == null)
+            {
+                return;
+            }
+
+            if (UIManager.Gumps.OfType<MobileVoiceButtonGump>().Any())
+            {
+                return;
+            }
+
+            UIManager.Add(new MobileVoiceButtonGump(world));
+            Log.Info("[MobileUI] кнопка голосового ввода добавлена");
+        }
+
+        public static void ToggleVoiceButton()
+        {
+            Init();
+
+            Config.ShowVoiceButton = !Config.ShowVoiceButton;
+            Config.Save();
+
+            if (!Config.ShowVoiceButton)
+            {
+                foreach (var gump in UIManager.Gumps.OfType<MobileVoiceButtonGump>().ToList())
+                {
+                    gump.Dispose();
+                }
+            }
+            else
+            {
+                EnsureVoiceButton();
+            }
+
+            Log.Info($"[MobileUI] голосовой ввод: {(Config.ShowVoiceButton ? "включён" : "выключен")}");
         }
 
         public static void ToggleEnabled()

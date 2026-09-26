@@ -603,6 +603,9 @@ namespace ClassicUO.Configuration
                                 case GumpType.MobileUiButton:
                                     gump = new MobileUiButtonGump(world);
                                     break;
+                                case GumpType.VoiceButton:
+                                    gump = new MobileVoiceButtonGump(world);
+                                    break;
 
                                 case GumpType.MiniMap:
                                     gump = new MiniMapGump(world);

@@ -40,6 +40,10 @@ namespace ClassicUO.MobileUI
         [JsonPropertyName("grid_containers")]
         public bool GridContainers { get; set; } = true;
 
+        /// <summary>Показывать экранную кнопку голосового ввода «[ 🎤 ]».</summary>
+        [JsonPropertyName("show_voice_button")]
+        public bool ShowVoiceButton { get; set; } = true;
+
         [JsonIgnore]
         public string FilePath { get; private set; } = "";
 
