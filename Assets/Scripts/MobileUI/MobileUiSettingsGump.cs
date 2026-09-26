@@ -13,7 +13,7 @@ namespace ClassicUO.Game.UI.Gumps
     internal class MobileUiSettingsGump : Gump
     {
         private const int Width_ = 450;
-        private const int Height_ = 330;
+        private const int Height_ = 380;
 
         public MobileUiSettingsGump(World world) : base(world, 0, 0)
         {
@@ -174,6 +174,41 @@ namespace ClassicUO.Game.UI.Gumps
                 IsSelectable = false
             });
 
+            // --- режим рюкзака: сетка (Diablo) / классика ---
+            bool isGrid = ClassicUO.MobileUI.MobileUiController.GridContainers;
+            string gridModeText = ClassicUO.MobileUI.MobileUiController.T("grid_containers") + ": " +
+                                  ClassicUO.MobileUI.MobileUiController.T(isGrid ? "grid_view" : "classic_view");
+            Add(new Label(
+                gridModeText,
+                true,
+                0xFFFF,
+                Width_ - 40,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 24,
+                Y = 268
+            });
+
+            Add(new Button(30, 0x0481, 0x0482, 0x0483)
+            {
+                X = 24,
+                Y = 290,
+                ButtonAction = ButtonAction.Activate
+            });
+
+            Add(new Label(
+                ClassicUO.MobileUI.MobileUiController.T("hint_switch"),
+                true,
+                0x03B2,
+                Width_ - 40,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 66,
+                Y = 296
+            });
+
             // --- подсказки по книгам и сумкам ---
             Add(new Label(
                 "• " + ClassicUO.MobileUI.MobileUiController.T("books_hint"),
@@ -184,7 +219,7 @@ namespace ClassicUO.Game.UI.Gumps
                 FontStyle.BlackBorder)
             {
                 X = 24,
-                Y = 268
+                Y = 328
             });
 
             // --- закрыть ---
@@ -242,6 +277,11 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case 21:
                     ClassicUO.MobileUI.MobileUiController.ChangeContainerScale(20);
+
+                    break;
+
+                case 30:
+                    ClassicUO.MobileUI.MobileUiController.ToggleGridContainers();
 
                     break;
 

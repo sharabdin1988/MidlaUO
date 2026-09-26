@@ -36,6 +36,10 @@ namespace ClassicUO.MobileUI
         [JsonPropertyName("window_preset")]
         public int WindowPreset { get; set; } = 1;
 
+        /// <summary>Режим сетки для контейнеров и рюкзака (Diablo style).</summary>
+        [JsonPropertyName("grid_containers")]
+        public bool GridContainers { get; set; } = true;
+
         [JsonIgnore]
         public string FilePath { get; private set; } = "";
 
@@ -74,6 +78,7 @@ namespace ClassicUO.MobileUI
                         config.ShowButton = loaded.ShowButton;
                         config.RowHeight = loaded.RowHeight > 0 ? loaded.RowHeight : 44;
                         config.WindowPreset = loaded.WindowPreset < 0 || loaded.WindowPreset > 3 ? 1 : loaded.WindowPreset;
+                        config.GridContainers = loaded.GridContainers;
                         config.Language = MobileUiStrings.Normalize(loaded.Language);
                     }
                 }

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.IO;
@@ -26,6 +26,32 @@ namespace ClassicUO.Game.UI.Gumps
         private readonly bool _hideIfEmpty;
         private HitBox _hitBox;
         private bool _isMinimized;
+
+        // MobileUI: инвентарь-сетка (Diablo-style Grid)
+        private bool _isGridMode;
+        public bool IsGridMode
+        {
+            get => _isGridMode;
+            set
+            {
+                if (_isGridMode != value)
+                {
+                    _isGridMode = value;
+                    RequestUpdateContents();
+                }
+            }
+        }
+
+        private int _gridWidth = 460;
+        private int _gridHeight = 380;
+        private ResizePic _gridBackground;
+        private ScrollArea _gridScrollArea;
+        private Button _gridResizeButton;
+        private NiceButton _btnGridClose;
+        private NiceButton _btnGridClassic;
+        private NiceButton _btnGridSort;
+        private bool _gridResizing;
+        private Point _gridStartSize;
 
         internal const int CORPSES_GUMP = 0x0009;
 
@@ -86,7 +112,20 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
 
-            BuildGump();
+            _data = world.ContainerManager.Get(Graphic);
+
+            _isGridMode = ClassicUO.MobileUI.MobileUiController.Enabled &&
+                          ClassicUO.MobileUI.MobileUiController.GridContainers &&
+                          !IsChessboard && !IsBackgammonBoard;
+
+            if (_isGridMode)
+            {
+                BuildGridGump();
+            }
+            else
+            {
+                BuildGump();
+            }
 
             if (Graphic == CORPSES_GUMP)
             {
@@ -198,6 +237,286 @@ namespace ClassicUO.Game.UI.Gumps
 
             Width = _gumpPicContainer.Width = (int)(_gumpPicContainer.Width * scale);
             Height = _gumpPicContainer.Height = (int)(_gumpPicContainer.Height * scale);
+
+            if (ClassicUO.MobileUI.MobileUiController.Enabled && !IsChessboard && !IsBackgammonBoard)
+            {
+                Add(new NiceButton(Width - 38, 4, 32, 24, ButtonAction.Activate, "⊞")
+                {
+                    ButtonParameter = 9991,
+                    IsSelectable = false
+                });
+            }
+        }
+
+        private void BuildGridGump()
+        {
+            CanMove = true;
+            CanCloseWithRightClick = true;
+            WantUpdateSize = false;
+
+            Item item = World.Items.Get(LocalSerial);
+            if (item == null)
+            {
+                Dispose();
+                return;
+            }
+
+            if (_gridWidth <= 0 || _gridHeight <= 0)
+            {
+                _gridWidth = 460;
+                _gridHeight = 380;
+            }
+
+            Width = _gridWidth;
+            Height = _gridHeight;
+
+            // Фон окна сетки
+            _gridBackground = new ResizePic(0x0A3C)
+            {
+                X = 0,
+                Y = 0,
+                Width = Width,
+                Height = Height
+            };
+            Add(_gridBackground);
+
+            // Заголовок
+            string containerName = item.Name;
+            if (string.IsNullOrEmpty(containerName))
+            {
+                containerName = item == World.Player?.FindItemByLayer(Layer.Backpack)
+                    ? ClassicUO.MobileUI.MobileUiController.T("backpack")
+                    : ClassicUO.MobileUI.MobileUiController.T("container");
+            }
+
+            int count = 0;
+            for (var cur = item.Items; cur != null; cur = cur.Next) count++;
+
+            Add(new Label(
+                $"{containerName} ({count})",
+                true,
+                0x0386,
+                200,
+                255,
+                FontStyle.BlackBorder)
+            {
+                X = 16,
+                Y = 10
+            });
+
+            if (item == World.Player?.FindItemByLayer(Layer.Backpack))
+            {
+                string stats = $"{ClassicUO.MobileUI.MobileUiController.T("weight_short")}: {World.Player.Weight}/{World.Player.MaxWeight}";
+                Add(new Label(
+                    stats,
+                    true,
+                    0x03B2,
+                    160,
+                    255,
+                    FontStyle.BlackBorder)
+                {
+                    X = 16,
+                    Y = 28
+                });
+            }
+
+            // Кнопка [ ⚡ Сорт ]
+            _btnGridSort = new NiceButton(Width - 172, 8, 62, 26, ButtonAction.Activate, "⚡ " + ClassicUO.MobileUI.MobileUiController.T("sort"))
+            {
+                ButtonParameter = 9992,
+                IsSelectable = false
+            };
+            Add(_btnGridSort);
+
+            // Кнопка [ 🎒 Классика ]
+            _btnGridClassic = new NiceButton(Width - 104, 8, 48, 26, ButtonAction.Activate, "🎒")
+            {
+                ButtonParameter = 9993,
+                IsSelectable = false
+            };
+            SetTooltip(_btnGridClassic, ClassicUO.MobileUI.MobileUiController.T("classic_view"));
+            Add(_btnGridClassic);
+
+            // Кнопка [ ✕ ]
+            _btnGridClose = new NiceButton(Width - 50, 8, 38, 26, ButtonAction.Activate, ClassicUO.MobileUI.MobileUiController.T("close"))
+            {
+                ButtonParameter = 9994,
+                IsSelectable = false
+            };
+            Add(_btnGridClose);
+
+            // Кружочек ресайза в правом нижнем углу
+            _gridResizeButton = new Button(9995, 0x837, 0x838, 0x838)
+            {
+                ButtonAction = ButtonAction.Activate
+            };
+
+            if (UnityEngine.Application.isMobilePlatform)
+            {
+                _gridResizeButton.Width *= 2;
+                _gridResizeButton.Height *= 2;
+                _gridResizeButton.ContainsByBounds = true;
+            }
+
+            _gridResizeButton.X = Width - _gridResizeButton.Width + 2;
+            _gridResizeButton.Y = Height - _gridResizeButton.Height + 2;
+
+            _gridResizeButton.MouseDown += (sender, e) =>
+            {
+                _gridResizing = true;
+                _gridStartSize = new Point(Width, Height);
+            };
+
+            _gridResizeButton.MouseUp += (sender, e) =>
+            {
+                if (_gridResizing)
+                {
+                    _gridResizing = false;
+                    _gridStartSize = new Point(Width, Height);
+                    RequestUpdateContents();
+                }
+            };
+
+            Add(_gridResizeButton);
+
+            // Область со скроллом для сетки ячеек
+            int headerH = 46;
+            int footerH = 26;
+            int listH = Height - headerH - footerH;
+
+            _gridScrollArea = new ScrollArea(10, headerH, Width - 20, Math.Max(60, listH), true)
+            {
+                AcceptMouseInput = true
+            };
+            Add(_gridScrollArea);
+        }
+
+        private void ItemsOnAddedGrid()
+        {
+            if (_gridScrollArea == null) return;
+
+            Entity container = World.Get(LocalSerial);
+            if (container == null) return;
+
+            int slotSize = ClassicUO.MobileUI.MobileGridSlotManager.DefaultSlotSize;
+            int gap = ClassicUO.MobileUI.MobileGridSlotManager.DefaultGap;
+            int availableW = _gridScrollArea.Width - 14;
+            int cols = Math.Max(4, availableW / (slotSize + gap));
+
+            var itemList = new List<Item>();
+            for (var cur = container.Items; cur != null; cur = cur.Next)
+            {
+                if (cur is Item it && !it.IsDestroyed && it.Amount > 0)
+                {
+                    itemList.Add(it);
+                }
+            }
+
+            var occupied = new HashSet<int>();
+            var slotToItem = new Dictionary<int, Item>();
+
+            foreach (var it in itemList)
+            {
+                int slot = ClassicUO.MobileUI.MobileGridSlotManager.GetOrAssignSlot(LocalSerial, it.Serial, it.X, it.Y, occupied);
+                slotToItem[slot] = it;
+            }
+
+            int maxSlot = slotToItem.Keys.Count > 0 ? slotToItem.Keys.Max() : 0;
+            int totalSlots = Math.Max(35, Math.Max(itemList.Count + cols, ((maxSlot / cols) + 2) * cols));
+
+            for (int s = 0; s < totalSlots; s++)
+            {
+                int c = s % cols;
+                int r = s / cols;
+
+                int cellX = c * (slotSize + gap);
+                int cellY = r * (slotSize + gap);
+
+                uint serial = slotToItem.TryGetValue(s, out Item item) ? item.Serial : 0;
+
+                var cell = new ClassicUO.MobileUI.MobileGridCellControl(this, s, serial, slotSize)
+                {
+                    X = cellX,
+                    Y = cellY
+                };
+
+                _gridScrollArea.Add(cell);
+            }
+        }
+
+        public void OnGridSlotDropped(int targetSlot, uint targetItemSerial)
+        {
+            if (!Client.Game.UO.GameCursor.ItemHold.Enabled || Client.Game.UO.GameCursor.ItemHold.IsFixedPosition)
+            {
+                return;
+            }
+
+            uint heldSerial = Client.Game.UO.GameCursor.ItemHold.Serial;
+
+            if (targetSlot < 0)
+            {
+                Point pt = ClassicUO.MobileUI.MobileGridSlotManager.SlotToContainerCoords(0);
+                GameActions.DropItem(heldSerial, pt.X, pt.Y, 0, LocalSerial);
+                return;
+            }
+
+            // 1. Слот пуст
+            if (targetItemSerial == 0)
+            {
+                Point pt = ClassicUO.MobileUI.MobileGridSlotManager.SlotToContainerCoords(targetSlot);
+                ClassicUO.MobileUI.MobileGridSlotManager.SetSlot(LocalSerial, heldSerial, targetSlot);
+                GameActions.DropItem(heldSerial, pt.X, pt.Y, 0, LocalSerial);
+                return;
+            }
+
+            // 2. В слоте уже лежит предмет
+            Item targetItem = World.Items.Get(targetItemSerial);
+            if (targetItem != null && targetItem.Serial != heldSerial)
+            {
+                if (targetItem.ItemData.IsStackable && targetItem.Graphic == Client.Game.UO.GameCursor.ItemHold.Graphic)
+                {
+                    GameActions.DropItem(heldSerial, targetItem.X, targetItem.Y, 0, LocalSerial);
+                    return;
+                }
+
+                if (targetItem.ItemData.IsContainer)
+                {
+                    GameActions.DropItem(heldSerial, 0xFFFF, 0xFFFF, 0, targetItem.Serial);
+                    return;
+                }
+
+                // Рокировка (Swap)
+                ClassicUO.MobileUI.MobileGridSlotManager.SwapSlots(LocalSerial, heldSerial, targetItem.Serial);
+                Point pt = ClassicUO.MobileUI.MobileGridSlotManager.SlotToContainerCoords(targetSlot);
+                GameActions.DropItem(heldSerial, pt.X, pt.Y, 0, LocalSerial);
+            }
+        }
+
+        private void OnGridResize()
+        {
+            if (_gridBackground != null)
+            {
+                _gridBackground.Width = Width;
+                _gridBackground.Height = Height;
+            }
+
+            if (_gridResizeButton != null)
+            {
+                _gridResizeButton.X = Width - _gridResizeButton.Width + 2;
+                _gridResizeButton.Y = Height - _gridResizeButton.Height + 2;
+            }
+
+            if (_btnGridClose != null) _btnGridClose.X = Width - 50;
+            if (_btnGridClassic != null) _btnGridClassic.X = Width - 104;
+            if (_btnGridSort != null) _btnGridSort.X = Width - 172;
+
+            if (_gridScrollArea != null)
+            {
+                int headerH = 46;
+                int footerH = 26;
+                _gridScrollArea.Width = Width - 20;
+                _gridScrollArea.Height = Math.Max(60, Height - headerH - footerH);
+            }
         }
 
         private void HitBoxOnMouseUp(object sender, MouseEventArgs e)
@@ -233,6 +552,30 @@ namespace ClassicUO.Game.UI.Gumps
         {
             if (button != MouseButtonType.Left || UIManager.IsMouseOverWorld)
             {
+                return;
+            }
+
+            if (_isGridMode && Client.Game.UO.GameCursor.ItemHold.Enabled && !Client.Game.UO.GameCursor.ItemHold.IsFixedPosition)
+            {
+                if (_gridScrollArea != null)
+                {
+                    int relX = x - _gridScrollArea.X;
+                    int relY = y - _gridScrollArea.Y + _gridScrollArea.ScrollValue;
+                    int slotSize = ClassicUO.MobileUI.MobileGridSlotManager.DefaultSlotSize;
+                    int gap = ClassicUO.MobileUI.MobileGridSlotManager.DefaultGap;
+                    int availableW = _gridScrollArea.Width - 14;
+                    int cols = Math.Max(4, availableW / (slotSize + gap));
+                    int col = relX / (slotSize + gap);
+                    int row = relY / (slotSize + gap);
+                    if (col >= 0 && col < cols && row >= 0)
+                    {
+                        int targetSlot = row * cols + col;
+                        OnGridSlotDropped(targetSlot, 0);
+                        return;
+                    }
+                }
+
+                OnGridSlotDropped(0, 0);
                 return;
             }
 
@@ -499,14 +842,79 @@ namespace ClassicUO.Game.UI.Gumps
                 _eyeGumpPic.Width = (int)(_eyeGumpPic.Width * scale);
                 _eyeGumpPic.Height = (int)(_eyeGumpPic.Height * scale);
             }
+
+            if (_gridResizing)
+            {
+                Point offset = Mouse.LDragOffset;
+                if (offset != Point.Zero)
+                {
+                    int w = _gridStartSize.X + offset.X;
+                    int h = _gridStartSize.Y + offset.Y;
+
+                    int maxW = ClassicUO.MobileUI.MobileUiController.ScreenWidth;
+                    int maxH = ClassicUO.MobileUI.MobileUiController.ScreenHeight;
+
+                    w = Math.Max(320, Math.Min(maxW, w));
+                    h = Math.Max(240, Math.Min(maxH, h));
+
+                    if (w != Width || h != Height)
+                    {
+                        Width = w;
+                        Height = h;
+                        _gridWidth = w;
+                        _gridHeight = h;
+                        OnGridResize();
+                    }
+                }
+            }
         }
 
         protected override void UpdateContents()
         {
             Clear();
-            BuildGump();
-            IsMinimized = IsMinimized;
-            ItemsOnAdded();
+            if (_isGridMode && ClassicUO.MobileUI.MobileUiController.Enabled && !IsChessboard && !IsBackgammonBoard)
+            {
+                BuildGridGump();
+                ItemsOnAddedGrid();
+            }
+            else
+            {
+                BuildGump();
+                IsMinimized = IsMinimized;
+                ItemsOnAdded();
+            }
+        }
+
+        public override void OnButtonClick(int buttonID)
+        {
+            if (buttonID == 9991) // Switch to Grid
+            {
+                IsGridMode = true;
+                RequestUpdateContents();
+                return;
+            }
+            if (buttonID == 9992) // Sort
+            {
+                Item it = World.Items.Get(LocalSerial);
+                if (it != null)
+                {
+                    ClassicUO.MobileUI.MobileGridSorter.SortContainer(World, it);
+                    RequestUpdateContents();
+                }
+                return;
+            }
+            if (buttonID == 9993) // Switch to Classic
+            {
+                IsGridMode = false;
+                RequestUpdateContents();
+                return;
+            }
+            if (buttonID == 9994) // Close
+            {
+                Dispose();
+                return;
+            }
+            base.OnButtonClick(buttonID);
         }
 
         public override void Save(XmlTextWriter writer)

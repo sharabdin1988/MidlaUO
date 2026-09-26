@@ -229,6 +229,33 @@ namespace ClassicUO.MobileUI
         public static int ScreenWidth => Client.Game?.Window?.ClientBounds.Width ?? 1280;
         public static int ScreenHeight => Client.Game?.Window?.ClientBounds.Height ?? 720;
 
+        public static bool GridContainers
+        {
+            get => Config?.GridContainers ?? true;
+            set
+            {
+                if (Config != null)
+                {
+                    Config.GridContainers = value;
+                    Config.Save();
+                }
+            }
+        }
+
+        public static void ToggleGridContainers()
+        {
+            GridContainers = !GridContainers;
+            // Обновляем все открытые контейнеры
+            for (var node = UIManager.Gumps.First; node != null; node = node.Next)
+            {
+                if (node.Value is ContainerGump cg && !cg.IsDisposed)
+                {
+                    cg.IsGridMode = GridContainers;
+                    cg.RequestUpdateContents();
+                }
+            }
+        }
+
         public static int ContainerScale => ClassicUO.Configuration.ProfileManager.CurrentProfile?.ContainersScale ?? 100;
 
         public static void ChangeContainerScale(int delta)
