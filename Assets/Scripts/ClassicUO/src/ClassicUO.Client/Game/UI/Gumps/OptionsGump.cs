@@ -4655,7 +4655,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             public SettingsSection(string title, int width)
             {
-                CanMove = true;
+                CanMove = false;
                 AcceptMouseInput = true;
                 WantUpdateSize = true;
 

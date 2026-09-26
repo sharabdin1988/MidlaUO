@@ -19,6 +19,8 @@ namespace ClassicUO.Game.UI.Controls
         private readonly Label _label;
         private readonly int _maxHeight;
         private int _selectedIndex;
+        private Point _mouseDownPos;
+        private bool _isMouseDown;
 
         public Combobox
         (
@@ -122,12 +124,33 @@ namespace ClassicUO.Game.UI.Controls
         }
 
 
+        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        {
+            base.OnMouseDown(x, y, button);
+            if (button == MouseButtonType.Left)
+            {
+                _isMouseDown = true;
+                _mouseDownPos = Mouse.Position;
+            }
+        }
+
         protected override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button != MouseButtonType.Left)
             {
                 return;
             }
+
+            if (_isMouseDown)
+            {
+                Point delta = Mouse.Position - _mouseDownPos;
+                if (Math.Abs(delta.X) > 12 || Math.Abs(delta.Y) > 12)
+                {
+                    _isMouseDown = false;
+                    return;
+                }
+            }
+            _isMouseDown = false;
 
             // MobileUO: for assistant
             OnBeforeContextMenu?.Invoke(this, null);

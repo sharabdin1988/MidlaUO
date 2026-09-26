@@ -16,6 +16,8 @@ namespace ClassicUO.Game.UI.Controls
         private readonly RenderedText _text;
         private ushort _inactive,
             _active;
+        private Point _mouseDownPos;
+        private bool _isMouseDown;
 
         // MobileUO: NOTE: Added for Assistant
         public ushort Hue
@@ -130,12 +132,27 @@ namespace ClassicUO.Game.UI.Controls
             ValueChanged.Raise(this);
         }
 
+        protected override void OnMouseDown(int x, int y, MouseButtonType button)
+        {
+            base.OnMouseDown(x, y, button);
+            if (button == MouseButtonType.Left)
+            {
+                _isMouseDown = true;
+                _mouseDownPos = Mouse.Position;
+            }
+        }
+
         protected override void OnMouseUp(int x, int y, MouseButtonType button)
         {
             if (button == MouseButtonType.Left && MouseIsOver)
             {
-                IsChecked = !IsChecked;
+                if (!_isMouseDown || (Math.Abs(Mouse.Position.X - _mouseDownPos.X) <= 12 && Math.Abs(Mouse.Position.Y - _mouseDownPos.Y) <= 12))
+                {
+                    IsChecked = !IsChecked;
+                }
             }
+
+            _isMouseDown = false;
         }
 
         public override void Dispose()

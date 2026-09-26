@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using ClassicUO.Input;
@@ -17,6 +17,10 @@ namespace ClassicUO.Game.UI.Controls
     {
         private bool _isNormalScroll;
         private readonly ScrollBarBase _scrollBar;
+        private bool _isTouchDragging;
+        private Point _touchStartPos;
+        private int _lastTouchY;
+        private bool _hasTouchMoved;
 
         public ScrollArea
         (
@@ -56,7 +60,7 @@ namespace ClassicUO.Game.UI.Controls
 
             AcceptMouseInput = true;
             WantUpdateSize = false;
-            CanMove = true;
+            CanMove = false;
             ScrollbarBehaviour = ScrollbarBehaviour.ShowWhenDataExceedFromView;
         }
 
@@ -84,6 +88,59 @@ namespace ClassicUO.Game.UI.Controls
             else if (ScrollbarBehaviour == ScrollbarBehaviour.ShowWhenDataExceedFromView)
             {
                 _scrollBar.IsVisible = _scrollBar.MaxValue > _scrollBar.MinValue;
+            }
+
+            // Тач-скролл пальцем (finger drag scrolling) для мобильных устройств
+            if (_scrollBar.MaxValue > _scrollBar.MinValue)
+            {
+                Point mousePos = Mouse.Position;
+                int screenX = ScreenCoordinateX;
+                int screenY = ScreenCoordinateY;
+                bool isInsideArea = mousePos.X >= screenX && mousePos.X < screenX + Width &&
+                                    mousePos.Y >= screenY && mousePos.Y < screenY + Height;
+
+                if (Mouse.LButtonPressed)
+                {
+                    if (!_isTouchDragging && isInsideArea)
+                    {
+                        // Не перехватываем, если нажали точно на ползунок или стрелки самого скроллбара
+                        int relX = mousePos.X - screenX;
+                        if (!_scrollBar.IsVisible || relX < Width - 20)
+                        {
+                            _isTouchDragging = true;
+                            _touchStartPos = mousePos;
+                            _lastTouchY = mousePos.Y;
+                            _hasTouchMoved = false;
+                        }
+                    }
+                    else if (_isTouchDragging)
+                    {
+                        if (!_hasTouchMoved && (Math.Abs(mousePos.Y - _touchStartPos.Y) > 5 || Math.Abs(mousePos.X - _touchStartPos.X) > 5))
+                        {
+                            _hasTouchMoved = true;
+                        }
+
+                        if (_hasTouchMoved)
+                        {
+                            int deltaY = mousePos.Y - _lastTouchY;
+                            if (deltaY != 0)
+                            {
+                                _scrollBar.Value -= deltaY;
+                                _lastTouchY = mousePos.Y;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    _isTouchDragging = false;
+                    _hasTouchMoved = false;
+                }
+            }
+            else
+            {
+                _isTouchDragging = false;
+                _hasTouchMoved = false;
             }
         }
 
