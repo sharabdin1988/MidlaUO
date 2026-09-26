@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
@@ -306,7 +308,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (item == World.Player?.FindItemByLayer(Layer.Backpack))
             {
-                string stats = $"{ClassicUO.MobileUI.MobileUiController.T("weight_short")}: {World.Player.Weight}/{World.Player.MaxWeight}";
+                string stats = $"{ClassicUO.MobileUI.MobileUiController.T("weight_short")}: {World.Player.Weight}/{World.Player.WeightMax}";
                 Add(new Label(
                     stats,
                     true,
@@ -334,7 +336,7 @@ namespace ClassicUO.Game.UI.Gumps
                 ButtonParameter = 9993,
                 IsSelectable = false
             };
-            SetTooltip(_btnGridClassic, ClassicUO.MobileUI.MobileUiController.T("classic_view"));
+            _btnGridClassic.SetTooltip(ClassicUO.MobileUI.MobileUiController.T("classic_view"));
             Add(_btnGridClassic);
 
             // Кнопка [ ✕ ]

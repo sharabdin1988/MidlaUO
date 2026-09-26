@@ -156,9 +156,9 @@ namespace ClassicUO.MobileUI
             if (layer == (byte)Layer.OneHanded || layer == (byte)Layer.TwoHanded) return 1;
 
             // 2: Броня и щиты
-            if (item.ItemData.IsWearable && (layer == (byte)Layer.Helm || layer == (byte)Layer.Tunic ||
+            if (item.ItemData.IsWearable && (layer == (byte)Layer.Helmet || layer == (byte)Layer.Tunic ||
                 layer == (byte)Layer.Arms || layer == (byte)Layer.Gloves || layer == (byte)Layer.Pants ||
-                layer == (byte)Layer.Shoes || layer == (byte)Layer.Shield)) return 2;
+                layer == (byte)Layer.Shoes || layer == (byte)Layer.Torso || layer == (byte)Layer.Legs)) return 2;
 
             // 3: Одежда и бижутерия
             if (item.ItemData.IsWearable) return 3;
@@ -359,14 +359,15 @@ namespace ClassicUO.MobileUI
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(0);
 
             // 1. Фон ячейки (тёмно-серый полупрозрачный)
-            Color bgColor = (MouseIsOver || (ItemSerial != 0 && SelectedObject.Object?.Serial == ItemSerial))
+            bool isSelected = ItemSerial != 0 && (SelectedObject.Object as Entity)?.Serial == ItemSerial;
+            Color bgColor = (MouseIsOver || isSelected)
                 ? new Color(45, 50, 65, 220)
                 : new Color(24, 26, 34, 180);
 
             batcher.DrawRectangle(SolidColorTextureCache.GetTexture(bgColor), x, y, Width, Height, hueVector);
 
             // 2. Рамка слота
-            Color borderColor = (MouseIsOver || (ItemSerial != 0 && SelectedObject.Object?.Serial == ItemSerial))
+            Color borderColor = (MouseIsOver || isSelected)
                 ? new Color(0x35, 0x90, 0xE0, 255)
                 : new Color(55, 60, 75, 180);
 
