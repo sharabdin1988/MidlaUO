@@ -87,6 +87,8 @@ namespace ClassicUO.MobileUI
         public static bool HasMicrophonePermission()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
+            // Dummy-обращение к Microphone гарантирует включение разрешения RECORD_AUDIO в манифест при сборке Unity
+            try { var dummy = UnityEngine.Microphone.devices; } catch { }
             return UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Microphone);
 #else
             return true;
@@ -96,6 +98,7 @@ namespace ClassicUO.MobileUI
         public static void RequestMicrophonePermission(Action<bool> onResult)
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
+            Log.Info("[VoiceInput] Requesting RECORD_AUDIO permission...");
             if (HasMicrophonePermission())
             {
                 onResult?.Invoke(true);
@@ -103,9 +106,18 @@ namespace ClassicUO.MobileUI
             }
 
             var callbacks = new UnityEngine.Android.PermissionCallbacks();
-            callbacks.PermissionGranted += (perm) => Enqueue(() => onResult?.Invoke(true));
-            callbacks.PermissionDenied += (perm) => Enqueue(() => onResult?.Invoke(false));
-            callbacks.PermissionDeniedAndDontAskAgain += (perm) => Enqueue(() => onResult?.Invoke(false));
+            callbacks.PermissionGranted += (perm) => Enqueue(() => {
+                Log.Info("[VoiceInput] Permission granted!");
+                onResult?.Invoke(true);
+            });
+            callbacks.PermissionDenied += (perm) => Enqueue(() => {
+                Log.Warn("[VoiceInput] Permission denied!");
+                onResult?.Invoke(false);
+            });
+            callbacks.PermissionDeniedAndDontAskAgain += (perm) => Enqueue(() => {
+                Log.Warn("[VoiceInput] Permission denied and dont ask again!");
+                onResult?.Invoke(false);
+            });
 
             UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.Microphone, callbacks);
 #else
@@ -115,6 +127,7 @@ namespace ClassicUO.MobileUI
 
         public static void StartListening(World world = null)
         {
+            Log.Info("[VoiceInput] StartListening called");
             if (IsListening)
             {
                 return;
@@ -124,12 +137,14 @@ namespace ClassicUO.MobileUI
 
             if (!IsRecognitionAvailable())
             {
+                Log.Warn("[VoiceInput] Speech recognition not available on device");
                 if (world != null) GameActions.Print(world, MobileUiController.T("voice_no_support"), 0x22);
                 return;
             }
 
             if (!HasMicrophonePermission())
             {
+                Log.Info("[VoiceInput] Microphone permission not yet granted, asking user...");
                 RequestMicrophonePermission(granted =>
                 {
                     if (granted)
@@ -152,6 +167,11 @@ namespace ClassicUO.MobileUI
             IsListening = true;
             CurrentState = VoiceState.Ready;
             StateChanged?.Invoke(CurrentState);
+
+            if (world != null)
+            {
+                GameActions.Print(world, "🎤 " + MobileUiController.T("voice_ready"), 0x0035);
+            }
 
 #if UNITY_ANDROID && !UNITY_EDITOR
             try

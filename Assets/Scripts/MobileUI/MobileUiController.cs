@@ -121,7 +121,17 @@ namespace ClassicUO.MobileUI
                 return;
             }
 
-            if (UIManager.Gumps.OfType<MobileUiButtonGump>().Any())
+            var existing = UIManager.Gumps.OfType<MobileUiButtonGump>().ToList();
+            if (existing.Count > 1)
+            {
+                for (int i = 1; i < existing.Count; i++)
+                {
+                    existing[i].Dispose();
+                }
+                return;
+            }
+
+            if (existing.Count == 1)
             {
                 return;
             }
@@ -145,7 +155,17 @@ namespace ClassicUO.MobileUI
                 return;
             }
 
-            if (UIManager.Gumps.OfType<MobileVoiceButtonGump>().Any())
+            var existing = UIManager.Gumps.OfType<MobileVoiceButtonGump>().ToList();
+            if (existing.Count > 1)
+            {
+                for (int i = 1; i < existing.Count; i++)
+                {
+                    existing[i].Dispose();
+                }
+                return;
+            }
+
+            if (existing.Count == 1)
             {
                 return;
             }

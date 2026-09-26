@@ -22,6 +22,7 @@ namespace ClassicUO.Game.UI.Gumps
         private Texture2D _background;
         private Label _iconLabel;
         private Label _statusLabel;
+        private Point _mouseDownPos;
         private uint _touchDownTime;
         private bool _isTouchHeld;
 
@@ -140,6 +141,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (button == MouseButtonType.Left)
             {
+                _mouseDownPos = Mouse.Position;
                 _touchDownTime = Time.Ticks;
                 _isTouchHeld = false;
             }
@@ -149,13 +151,13 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.Update();
 
-            // Push-to-Talk детектор: если удерживаем палец более 350 мс без перетаскивания
-            if (Mouse.LButtonPressed && MouseIsOver && _touchDownTime > 0)
+            // Push-to-Talk детектор: если удерживаем палец более 300 мс без перетаскивания
+            if (_touchDownTime > 0 && Mouse.LButtonPressed)
             {
-                Point offset = Mouse.LDragOffset;
-                if (Math.Abs(offset.X) < 8 && Math.Abs(offset.Y) < 8)
+                Point delta = Mouse.Position - _mouseDownPos;
+                if (Math.Abs(delta.X) < 16 && Math.Abs(delta.Y) < 16)
                 {
-                    if (!_isTouchHeld && Time.Ticks - _touchDownTime > 350)
+                    if (!_isTouchHeld && Time.Ticks - _touchDownTime > 300)
                     {
                         _isTouchHeld = true;
                         if (!ClassicUO.MobileUI.MobileVoiceInput.IsListening)
@@ -163,6 +165,11 @@ namespace ClassicUO.Game.UI.Gumps
                             ClassicUO.MobileUI.MobileVoiceInput.StartListening(World);
                         }
                     }
+                }
+                else
+                {
+                    // Палец сместился более 16 px — это перетаскивание кнопки, сбрасываем PTT
+                    _touchDownTime = 0;
                 }
             }
         }
@@ -176,10 +183,10 @@ namespace ClassicUO.Game.UI.Gumps
                 return;
             }
 
-            Point offset = Mouse.LDragOffset;
+            Point delta = Mouse.Position - _mouseDownPos;
 
-            // Если не было смещения кнопки (не перетаскивание)
-            if (Math.Abs(offset.X) < 8 && Math.Abs(offset.Y) < 8)
+            // Если палец не двигался далеко (чистый тап, а не перетаскивание кнопки)
+            if (Math.Abs(delta.X) < 16 && Math.Abs(delta.Y) < 16)
             {
                 if (_isTouchHeld)
                 {
@@ -188,7 +195,7 @@ namespace ClassicUO.Game.UI.Gumps
                 }
                 else
                 {
-                    // Одиночный тап (переключение состояния)
+                    // Одиночный тап (переключение состояния вкл/выкл)
                     if (ClassicUO.MobileUI.MobileVoiceInput.IsListening)
                     {
                         ClassicUO.MobileUI.MobileVoiceInput.StopListening();

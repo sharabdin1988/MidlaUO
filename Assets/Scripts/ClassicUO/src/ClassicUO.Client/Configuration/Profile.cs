@@ -599,11 +599,19 @@ namespace ClassicUO.Configuration
                                 case GumpType.AssistantHotkeyButton:
                                     gump = new AssistantHotkeyButtonGump(world);
                                     break;
-                                // MidlaUO: экранная кнопка мобильного интерфейса
+                                // MidlaUO: экранная кнопка мобильного интерфейса (без дубликатов)
                                 case GumpType.MobileUiButton:
+                                    if (UIManager.Gumps.OfType<MobileUiButtonGump>().Any())
+                                    {
+                                        break;
+                                    }
                                     gump = new MobileUiButtonGump(world);
                                     break;
                                 case GumpType.VoiceButton:
+                                    if (UIManager.Gumps.OfType<MobileVoiceButtonGump>().Any())
+                                    {
+                                        break;
+                                    }
                                     gump = new MobileVoiceButtonGump(world);
                                     break;
 

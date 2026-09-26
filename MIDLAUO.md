@@ -267,3 +267,13 @@ rm -rf /data/debian/tmp/midla
   - "все за мной" -> "all follow me", "все в атаку" / "фас" -> "all kill"
   - "стоять" -> "all stay", "охранять" -> "all guard"
   - Если активно текстовое поле (поиск в сумке, чат) — текст вставляется в поле, иначе произносится персонажем в мир (`GameActions.Say`).
+
+#### 6. Исправление дубликатов кнопок «Моб. UI» и запуск микрофона/голосового ввода
+- **Устранение 3 кнопок «Моб. UI»**:
+  - При каждом выходе из игры `MobileUiButtonGump` (`type=23`) записывался в `gumps.xml`, а при повторном входе `Profile.cs` создавал кнопку заново из файла без проверки наличия уже существующей. С каждым сохранением количество кнопок росло;
+  - В `Profile.cs` добавлена проверка `UIManager.Gumps.OfType<MobileUiButtonGump>().Any()` и `OfType<MobileVoiceButtonGump>().Any()`;
+  - В `MobileUiController.cs` в `EnsureButton()` и `EnsureVoiceButton()` добавлена автоматическая утилизация лишних дубликатов при старте сцены.
+- **Исправление работы голосовой кнопки `[ 🎤 ]`**:
+  1. В скомпилированном APK отсутствовало разрешение `android.permission.RECORD_AUDIO` (Unity не добавляла его в манифест без кастомного `AndroidManifest.xml` или вызова класса `Microphone`). Из-за этого Android молча блокировал доступ к микрофону;
+  2. Добавлен `Assets/Plugins/Android/AndroidManifest.xml` с явным декларированием `<uses-permission android:name="android.permission.RECORD_AUDIO" />` и dummy-обращение к `UnityEngine.Microphone.devices`;
+  3. В `MobileVoiceButtonGump.cs` переписано распознавание тапа и Push-to-Talk: вместо `Mouse.LDragOffset` (который сбрасывался в `(0, 0)` до вызова `OnMouseUp`) сохраняется исходная координата тача `_mouseDownPos`, гарантируя надёжное срабатывание на любом сенсорном экране.
