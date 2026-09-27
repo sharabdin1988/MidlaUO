@@ -20,7 +20,6 @@ namespace ClassicUO.Game.UI.Gumps
     internal sealed class MobileVoiceButtonGump : AnchorableGump
     {
         private Texture2D _background;
-        private Label _iconLabel;
         private Label _statusLabel;
         private Point _mouseDownPos;
         private uint _touchDownTime;
@@ -32,7 +31,7 @@ namespace ClassicUO.Game.UI.Gumps
             AcceptMouseInput = true;
             CanCloseWithRightClick = false;
             WantUpdateSize = false;
-            WidthMultiplier = 1;
+            WidthMultiplier = 2;
             HeightMultiplier = 1;
             GroupMatrixWidth = 44;
             GroupMatrixHeight = 44;
@@ -51,29 +50,13 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void Build()
         {
-            Width = 48;
+            Width = 96;
             Height = 44;
 
             _background = SolidColorTextureCache.GetTexture(new Color(28, 28, 28));
 
-            _iconLabel = new Label(
-                "🎤",
-                true,
-                0x0035, // приятный голубоватый оттенок
-                Width,
-                255,
-                FontStyle.BlackBorder,
-                TEXT_ALIGN_TYPE.TS_CENTER
-            )
-            {
-                X = 0,
-                Y = 4,
-                AcceptMouseInput = false
-            };
-            Add(_iconLabel);
-
             _statusLabel = new Label(
-                ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Голос" : "Voice",
+                "🎤  " + (ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Голос" : "Voice"),
                 true,
                 1001,
                 Width,
@@ -83,7 +66,8 @@ namespace ClassicUO.Game.UI.Gumps
             )
             {
                 X = 0,
-                Y = 22,
+                Y = (Height >> 1) - 8,
+                Width = Width - 6,
                 AcceptMouseInput = false
             };
             Add(_statusLabel);
@@ -99,36 +83,35 @@ namespace ClassicUO.Game.UI.Gumps
 
         private void UpdateVisualState(ClassicUO.MobileUI.VoiceState state)
         {
+            if (_statusLabel == null)
+            {
+                return;
+            }
+
             switch (state)
             {
                 case ClassicUO.MobileUI.VoiceState.Ready:
                 case ClassicUO.MobileUI.VoiceState.Speaking:
-                    _iconLabel.Text = "🔴";
-                    _iconLabel.Hue = 0x0020; // красный
-                    _statusLabel.Text = ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Жду..." : "Rec...";
-                    _statusLabel.Hue = 0x0020;
+                    _statusLabel.Text = "🔴  " + (ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Слушаю..." : "Rec...");
+                    _statusLabel.Hue = 0x0020; // красный
                     _background = SolidColorTextureCache.GetTexture(new Color(60, 15, 15));
                     break;
 
                 case ClassicUO.MobileUI.VoiceState.Processing:
-                    _iconLabel.Text = "⚡";
-                    _iconLabel.Hue = 53; // жёлтый
-                    _statusLabel.Text = ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Обраб." : "Proc...";
-                    _statusLabel.Hue = 53;
+                    _statusLabel.Text = "⚡  " + (ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Обраб." : "Proc...");
+                    _statusLabel.Hue = 53; // жёлтый
                     _background = SolidColorTextureCache.GetTexture(new Color(45, 45, 15));
                     break;
 
                 case ClassicUO.MobileUI.VoiceState.Error:
-                    _iconLabel.Text = "❌";
-                    _statusLabel.Text = ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Ошибка" : "Error";
+                    _statusLabel.Text = "❌  " + (ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Ошибка" : "Error");
+                    _statusLabel.Hue = 0x0020;
                     _background = SolidColorTextureCache.GetTexture(new Color(45, 20, 20));
                     break;
 
                 case ClassicUO.MobileUI.VoiceState.Idle:
                 default:
-                    _iconLabel.Text = "🎤";
-                    _iconLabel.Hue = 0x0035;
-                    _statusLabel.Text = ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Голос" : "Voice";
+                    _statusLabel.Text = "🎤  " + (ClassicUO.MobileUI.MobileUiTranslation.IsRussian ? "Голос" : "Voice");
                     _statusLabel.Hue = 1001;
                     _background = SolidColorTextureCache.GetTexture(new Color(28, 28, 28));
                     break;

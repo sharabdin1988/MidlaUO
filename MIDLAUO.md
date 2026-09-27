@@ -296,3 +296,12 @@ rm -rf /data/debian/tmp/midla
     - Все коды ошибок транслируются в понятные русскоязычные сообщения;
   - В `AndroidManifest.xml` добавлен блок `<queries>` для `android.speech.RecognitionService` и `android.speech.action.RECOGNIZE_SPEECH`;
   - В `MobileVoiceInput.cs` интеграция переписана на легковесный типизированный прокси к `VoiceRecognizerHelper.java`.
+
+#### 9. Увеличение кнопки голосового ввода и перетаскивание спеллов/рун/навыков на экран
+- **Увеличение кнопки `[ 🎤 Голос ]`**:
+  - Ширина увеличена вдвое: с 48 px до 96 px (`Width = 96, Height = 44`, `WidthMultiplier = 2`), полностью соразмерна кнопке «Моб. UI» и макросам;
+  - Крупный понятный статус: `[ 🎤  Голос ]`, `[ 🔴  Слушаю... ]`, `[ ⚡  Обраб. ]`, `[ ❌  Ошибка ]`, под палец и большой палец руки;
+- **Перетаскивание спеллов, рун и навыков на экран (Drag & Drop to HUD)**:
+  - В `MobileSpellbookGump.cs` зажатие иконки спелла или кнопки `[ + Экран ]` теперь сразу поднимает `UseSpellButtonGump` под пальцем и активирует `UIManager.AttemptDragControl(gump, true)` — спелл можно плавно перетащить в любую точку экрана и примагнитить к хотбару;
+  - В `MobileRunebookGump.cs` перетаскивание кнопки `[ 📌 ]` точно так же создаёт `MobileRuneButtonGump` и привязывает её к движению пальца;
+  - В `StandardSkillsGump.cs` перетаскивание активного навыка теперь вызывает `UIManager.AttemptDragControl(skillButtonGump, true)`.

@@ -471,7 +471,7 @@ namespace ClassicUO.MobileUI
             int spellIndexForPin = index;
             iconPic.DragBegin += (s, e) =>
             {
-                PinSpellToScreen(spellIndexForPin);
+                PinSpellToScreen(spellIndexForPin, true);
             };
             _list.Add(iconPic);
 
@@ -534,11 +534,15 @@ namespace ClassicUO.MobileUI
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    PinSpellToScreen(spellIdxCopy);
+                    PinSpellToScreen(spellIdxCopy, false);
                 }
             };
+            btnPin.DragBegin += (s, e) =>
+            {
+                PinSpellToScreen(spellIdxCopy, true);
+            };
             _list.Add(btnPin);
-
+ 
             // Кнопка «КАСТ»
             var btnCast = new NiceButton(rowWidth - 80, y + 8, 74, 32, ButtonAction.Activate, MobileUiController.T("cast"))
             {
@@ -554,7 +558,7 @@ namespace ClassicUO.MobileUI
             _list.Add(btnCast);
         }
 
-        private void PinSpellToScreen(int index)
+        private void PinSpellToScreen(int index, bool startDrag = false)
         {
             var book = Source;
             if (book == null) return;
@@ -579,19 +583,30 @@ namespace ClassicUO.MobileUI
             if (existing != null)
             {
                 existing.BringOnTop();
+                if (startDrag)
+                {
+                    existing.X = Mouse.Position.X - 22;
+                    existing.Y = Mouse.Position.Y - 22;
+                    UIManager.AttemptDragControl(existing, true);
+                }
                 return;
             }
 
-            int screenX = 120 + (count % 4) * 50;
-            int screenY = 120 + (count / 4) * 50;
+            int spawnX = startDrag ? Mouse.Position.X - 22 : 120 + (count % 4) * 50;
+            int spawnY = startDrag ? Mouse.Position.Y - 22 : 120 + (count / 4) * 50;
 
             var gump = new UseSpellButtonGump(World, def)
             {
-                X = screenX,
-                Y = screenY
+                X = spawnX,
+                Y = spawnY
             };
 
             UIManager.Add(gump);
+
+            if (startDrag)
+            {
+                UIManager.AttemptDragControl(gump, true);
+            }
         }
 
         public override void Update()

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Collections.Generic;
@@ -923,7 +923,9 @@ namespace ClassicUO.Game.UI.Gumps
 
                         if (Index >= 0 && Index < _gump.World.Player.Skills.Length)
                         {
-                            UIManager.Add(new SkillButtonGump(_gump.World, _gump.World.Player.Skills[Index], Mouse.Position.X - 44, Mouse.Position.Y - 22));
+                            var skillButtonGump = new SkillButtonGump(_gump.World, _gump.World.Player.Skills[Index], Mouse.Position.X - 44, Mouse.Position.Y - 22);
+                            UIManager.Add(skillButtonGump);
+                            UIManager.AttemptDragControl(skillButtonGump, true);
                         }
                     }
                 }

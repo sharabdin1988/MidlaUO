@@ -390,8 +390,12 @@ namespace ClassicUO.MobileUI
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    PinRuneToScreen(rune);
+                    PinRuneToScreen(rune, false);
                 }
+            };
+            btnPin.DragBegin += (s, e) =>
+            {
+                PinRuneToScreen(rune, true);
             };
             _list.Add(btnPin);
 
@@ -402,14 +406,14 @@ namespace ClassicUO.MobileUI
                 IsSelectable = false
             });
 
-            // 2. Кнопка «Рекол» (каст заклинания Recall)
+            // 2. Кнопка «Рекол» (каст спелла Recall)
             _list.Add(new NiceButton(rowWidth - 210, y + 6, 68, 32, ButtonAction.Activate, MobileUiController.T("recall"))
             {
                 ButtonParameter = rune.RecallButton,
                 IsSelectable = false
             });
 
-            // 3. Кнопка «Гейт» (каст заклинания Gate Travel)
+            // 3. Кнопка «Гейт» (каст спелла Gate Travel)
             _list.Add(new NiceButton(rowWidth - 138, y + 6, 62, 32, ButtonAction.Activate, MobileUiController.T("gate"))
             {
                 ButtonParameter = rune.GateButton,
@@ -431,7 +435,7 @@ namespace ClassicUO.MobileUI
             });
         }
 
-        private void PinRuneToScreen(RuneEntry rune)
+        private void PinRuneToScreen(RuneEntry rune, bool startDrag = false)
         {
             var world = World;
             if (world == null)
@@ -457,14 +461,25 @@ namespace ClassicUO.MobileUI
             if (existing != null)
             {
                 existing.BringOnTop();
+                if (startDrag)
+                {
+                    existing.X = Mouse.Position.X - 44;
+                    existing.Y = Mouse.Position.Y - 22;
+                    UIManager.AttemptDragControl(existing, true);
+                }
                 return;
             }
 
-            int screenX = 120 + (count % 3) * 94;
-            int screenY = 180 + (count / 3) * 50;
+            int screenX = startDrag ? Mouse.Position.X - 44 : 120 + (count % 3) * 94;
+            int screenY = startDrag ? Mouse.Position.Y - 22 : 180 + (count / 3) * 50;
 
             var gump = new MobileRuneButtonGump(world, LocalSerial, rune.ChargeButton, rune.Name, screenX, screenY);
             UIManager.Add(gump);
+
+            if (startDrag)
+            {
+                UIManager.AttemptDragControl(gump, true);
+            }
         }
 
         public override void Update()
