@@ -93,6 +93,14 @@ namespace ClassicUO.Game.UI.Controls
             // Тач-скролл пальцем (finger drag scrolling) для мобильных устройств
             if (_scrollBar.MaxValue > _scrollBar.MinValue)
             {
+                // Если идет перетаскивание кнопки/элемента через UIManager — отключаем тач-скролл
+                if (ClassicUO.Game.Managers.UIManager.IsDragging)
+                {
+                    _isTouchDragging = false;
+                    _hasTouchMoved = false;
+                    return;
+                }
+
                 Point mousePos = Mouse.Position;
                 int screenX = ScreenCoordinateX;
                 int screenY = ScreenCoordinateY;

@@ -128,11 +128,16 @@ namespace ClassicUO.MobileUI
                 {
                     existing[i].Dispose();
                 }
-                return;
             }
 
-            if (existing.Count == 1)
+            if (existing.Count >= 1)
             {
+                var btn = existing[0];
+                if (btn.Y > 60)
+                {
+                    btn.X = 12;
+                    btn.Y = 12;
+                }
                 return;
             }
 
@@ -162,11 +167,16 @@ namespace ClassicUO.MobileUI
                 {
                     existing[i].Dispose();
                 }
-                return;
             }
 
-            if (existing.Count == 1)
+            if (existing.Count >= 1)
             {
+                var btn = existing[0];
+                if (btn.Y > 60)
+                {
+                    btn.X = 112;
+                    btn.Y = 12;
+                }
                 return;
             }
 

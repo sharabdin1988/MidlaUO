@@ -37,9 +37,9 @@ namespace ClassicUO.Game.UI.Gumps
             GroupMatrixHeight = 44;
             AnchorType = ANCHOR_TYPE.SPELL;
 
-            // Начальная позиция: слева под кнопкой Моб. UI
-            X = 12;
-            Y = 202;
+            // Начальная позиция: вверху рядом с кнопкой Моб. UI (не мешает джойстику)
+            X = 112;
+            Y = 12;
 
             Build();
 

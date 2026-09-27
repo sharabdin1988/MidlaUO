@@ -445,19 +445,27 @@ namespace ClassicUO.MobileUI
                 X = 0,
                 Y = y,
                 Width = rowWidth,
-                Height = RowHeight - 4
+                Height = RowHeight - 4,
+                Tag = index
             };
             _list.Add(bg);
 
-            // Клик по строке запускает каст
-            var hit = new HitBox(0, y, rowWidth - 170, RowHeight - 4, null, 0f);
+            // Клик по строке запускает каст (если не было свайпа/перетаскивания)
+            var hit = new HitBox(0, y, rowWidth - 170, RowHeight - 4, null, 0f)
+            {
+                Tag = index
+            };
             _list.Add(hit);
 
             hit.MouseUp += (sender, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    GameActions.CastSpellFromBook(index, _bookSerial);
+                    Point offset = Mouse.LDragOffset;
+                    if (Math.Abs(offset.X) < 8 && Math.Abs(offset.Y) < 8 && !UIManager.IsDragging)
+                    {
+                        GameActions.CastSpellFromBook(index, _bookSerial);
+                    }
                 }
             };
 
@@ -466,12 +474,13 @@ namespace ClassicUO.MobileUI
             var iconPic = new GumpPic(6, y + 2, iconGraphic, 0)
             {
                 AcceptMouseInput = true,
-                CanMove = true
+                CanMove = true,
+                Tag = index
             };
             int spellIndexForPin = index;
             iconPic.DragBegin += (s, e) =>
             {
-                PinSpellToScreen(spellIndexForPin, true);
+                SpawnAndDragSpell(spellIndexForPin);
             };
             _list.Add(iconPic);
 
@@ -528,18 +537,23 @@ namespace ClassicUO.MobileUI
             int spellIdxCopy = index;
             var btnPin = new NiceButton(rowWidth - 162, y + 8, 76, 32, ButtonAction.Activate, MobileUiController.T("pin"))
             {
-                IsSelectable = false
+                IsSelectable = false,
+                Tag = index
             };
             btnPin.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    PinSpellToScreen(spellIdxCopy, false);
+                    Point offset = Mouse.LDragOffset;
+                    if (Math.Abs(offset.X) < 8 && Math.Abs(offset.Y) < 8 && !UIManager.IsDragging)
+                    {
+                        PinSpellToScreen(spellIdxCopy);
+                    }
                 }
             };
             btnPin.DragBegin += (s, e) =>
             {
-                PinSpellToScreen(spellIdxCopy, true);
+                SpawnAndDragSpell(spellIdxCopy);
             };
             _list.Add(btnPin);
  
@@ -558,7 +572,53 @@ namespace ClassicUO.MobileUI
             _list.Add(btnCast);
         }
 
-        private void PinSpellToScreen(int index, bool startDrag = false)
+        protected override void OnDragBegin(int x, int y)
+        {
+            Control target = UIManager.MouseOverControl;
+            while (target != null && target != this)
+            {
+                if (target.Tag is int spellIdx)
+                {
+                    SpawnAndDragSpell(spellIdx);
+                    return;
+                }
+
+                target = target.Parent;
+            }
+
+            base.OnDragBegin(x, y);
+        }
+
+        private void SpawnAndDragSpell(int index)
+        {
+            var book = Source;
+            if (book == null) return;
+
+            var def = book.MobileGetSpellDefinition(index);
+            if (def == null) return;
+
+            // Удаляем старую кнопку этого спелла (если уже была на экране), чтобы не плодить дубли
+            for (LinkedListNode<Gump> node = UIManager.Gumps.Last; node != null; node = node.Previous)
+            {
+                if (node.Value is UseSpellButtonGump btn && btn.SpellID == def.ID)
+                {
+                    btn.Dispose();
+                    break;
+                }
+            }
+
+            // Создаем стандартную квадратную кнопку спелла ClassicUO прямо под пальцем (размер 44x44)
+            var gump = new UseSpellButtonGump(World, def)
+            {
+                X = Mouse.Position.X - 22,
+                Y = Mouse.Position.Y - 22
+            };
+
+            UIManager.Add(gump);
+            UIManager.AttemptDragControl(gump, true);
+        }
+
+        private void PinSpellToScreen(int index)
         {
             var book = Source;
             if (book == null) return;
@@ -583,17 +643,12 @@ namespace ClassicUO.MobileUI
             if (existing != null)
             {
                 existing.BringOnTop();
-                if (startDrag)
-                {
-                    existing.X = Mouse.Position.X - 22;
-                    existing.Y = Mouse.Position.Y - 22;
-                    UIManager.AttemptDragControl(existing, true);
-                }
                 return;
             }
 
-            int spawnX = startDrag ? Mouse.Position.X - 22 : 120 + (count % 4) * 50;
-            int spawnY = startDrag ? Mouse.Position.Y - 22 : 120 + (count / 4) * 50;
+            // Размещаем в верхнем хотбаре рядом с кнопками Моб. UI (12, 12) и Голос (112, 12)
+            int spawnX = 212 + (count % 8) * 46;
+            int spawnY = 12 + (count / 8) * 46;
 
             var gump = new UseSpellButtonGump(World, def)
             {
@@ -602,11 +657,7 @@ namespace ClassicUO.MobileUI
             };
 
             UIManager.Add(gump);
-
-            if (startDrag)
-            {
-                UIManager.AttemptDragControl(gump, true);
-            }
+            gump.BringOnTop();
         }
 
         public override void Update()

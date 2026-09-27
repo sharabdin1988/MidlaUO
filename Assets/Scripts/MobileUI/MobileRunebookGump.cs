@@ -350,7 +350,8 @@ namespace ClassicUO.MobileUI
                 X = 0,
                 Y = y,
                 Width = rowWidth,
-                Height = RowHeight - 4
+                Height = RowHeight - 4,
+                Tag = rune
             };
             _list.Add(bg);
 
@@ -364,7 +365,8 @@ namespace ClassicUO.MobileUI
                 FontStyle.BlackBorder)
             {
                 X = 4,
-                Y = y + 12
+                Y = y + 12,
+                Tag = rune
             });
 
             // Название руны
@@ -378,24 +380,30 @@ namespace ClassicUO.MobileUI
                 FontStyle.BlackBorder)
             {
                 X = 30,
-                Y = y + 12
+                Y = y + 12,
+                Tag = rune
             });
 
             // 0. Кнопка «📌» (вынести точку телепорта на экран в виде быстрой кнопки)
             var btnPin = new NiceButton(rowWidth - 326, y + 6, 32, 32, ButtonAction.Activate, "📌")
             {
-                IsSelectable = false
+                IsSelectable = false,
+                Tag = rune
             };
             btnPin.MouseUp += (s, e) =>
             {
                 if (e.Button == MouseButtonType.Left)
                 {
-                    PinRuneToScreen(rune, false);
+                    Point offset = Mouse.LDragOffset;
+                    if (Math.Abs(offset.X) < 8 && Math.Abs(offset.Y) < 8 && !UIManager.IsDragging)
+                    {
+                        PinRuneToScreen(rune);
+                    }
                 }
             };
             btnPin.DragBegin += (s, e) =>
             {
-                PinRuneToScreen(rune, true);
+                SpawnAndDragRune(rune);
             };
             _list.Add(btnPin);
 
@@ -435,7 +443,47 @@ namespace ClassicUO.MobileUI
             });
         }
 
-        private void PinRuneToScreen(RuneEntry rune, bool startDrag = false)
+        protected override void OnDragBegin(int x, int y)
+        {
+            Control target = UIManager.MouseOverControl;
+            while (target != null && target != this)
+            {
+                if (target.Tag is RuneEntry rune)
+                {
+                    SpawnAndDragRune(rune);
+                    return;
+                }
+
+                target = target.Parent;
+            }
+
+            base.OnDragBegin(x, y);
+        }
+
+        private void SpawnAndDragRune(RuneEntry rune)
+        {
+            var world = World;
+            if (world == null)
+            {
+                return;
+            }
+
+            // Удаляем старую кнопку этой руны, чтобы не плодить дубликаты
+            for (LinkedListNode<Gump> node = UIManager.Gumps.Last; node != null; node = node.Previous)
+            {
+                if (node.Value is MobileRuneButtonGump btn && btn.BookSerial == LocalSerial && btn.ButtonID == rune.ChargeButton)
+                {
+                    btn.Dispose();
+                    break;
+                }
+            }
+
+            var gump = new MobileRuneButtonGump(world, LocalSerial, rune.ChargeButton, rune.Name, Mouse.Position.X - 44, Mouse.Position.Y - 22);
+            UIManager.Add(gump);
+            UIManager.AttemptDragControl(gump, true);
+        }
+
+        private void PinRuneToScreen(RuneEntry rune)
         {
             var world = World;
             if (world == null)
@@ -461,25 +509,16 @@ namespace ClassicUO.MobileUI
             if (existing != null)
             {
                 existing.BringOnTop();
-                if (startDrag)
-                {
-                    existing.X = Mouse.Position.X - 44;
-                    existing.Y = Mouse.Position.Y - 22;
-                    UIManager.AttemptDragControl(existing, true);
-                }
                 return;
             }
 
-            int screenX = startDrag ? Mouse.Position.X - 44 : 120 + (count % 3) * 94;
-            int screenY = startDrag ? Mouse.Position.Y - 22 : 180 + (count / 3) * 50;
+            // Спавним на экране под верхним хотбаром
+            int screenX = 212 + (count % 6) * 98;
+            int screenY = 60 + (count / 6) * 46;
 
             var gump = new MobileRuneButtonGump(world, LocalSerial, rune.ChargeButton, rune.Name, screenX, screenY);
             UIManager.Add(gump);
-
-            if (startDrag)
-            {
-                UIManager.AttemptDragControl(gump, true);
-            }
+            gump.BringOnTop();
         }
 
         public override void Update()

@@ -606,6 +606,7 @@ namespace ClassicUO.Configuration
                                         break;
                                     }
                                     gump = new MobileUiButtonGump(world);
+                                    if (y > 60) { x = 12; y = 12; }
                                     break;
                                 case GumpType.VoiceButton:
                                     if (UIManager.Gumps.OfType<MobileVoiceButtonGump>().Any())
@@ -613,6 +614,7 @@ namespace ClassicUO.Configuration
                                         break;
                                     }
                                     gump = new MobileVoiceButtonGump(world);
+                                    if (y > 60) { x = 112; y = 12; }
                                     break;
 
                                 case GumpType.MiniMap:
@@ -777,6 +779,17 @@ namespace ClassicUO.Configuration
                                         break;
                                     case GumpType.AssistantHotkeyButton:
                                         gump = new AssistantHotkeyButtonGump(world);
+                                        break;
+                                    // MidlaUO: экранные кнопки Моб. UI и Голоса (без дубликатов, вверху экрана)
+                                    case GumpType.MobileUiButton:
+                                        if (UIManager.Gumps.OfType<MobileUiButtonGump>().Any()) break;
+                                        gump = new MobileUiButtonGump(world);
+                                        if (y > 60) { x = 12; y = 12; }
+                                        break;
+                                    case GumpType.VoiceButton:
+                                        if (UIManager.Gumps.OfType<MobileVoiceButtonGump>().Any()) break;
+                                        gump = new MobileVoiceButtonGump(world);
+                                        if (y > 60) { x = 112; y = 12; }
                                         break;
                                 }
 

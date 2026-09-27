@@ -31,9 +31,9 @@ namespace ClassicUO.Game.UI.Gumps
             GroupMatrixHeight = 44;
             AnchorType = ANCHOR_TYPE.SPELL;
 
-            // start position: below the top bar, on the left
+            // start position: top bar, on the left (не мешает джойстику)
             X = 12;
-            Y = 150;
+            Y = 12;
 
             Build();
         }
