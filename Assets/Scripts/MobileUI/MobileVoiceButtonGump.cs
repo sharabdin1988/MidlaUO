@@ -24,6 +24,7 @@ namespace ClassicUO.Game.UI.Gumps
         private Point _mouseDownPos;
         private uint _touchDownTime;
         private bool _isTouchHeld;
+        private bool _wasListeningBeforeDown;
 
         public MobileVoiceButtonGump(World world) : base(world, 0, 0)
         {
@@ -127,6 +128,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _mouseDownPos = Mouse.Position;
                 _touchDownTime = Time.Ticks;
                 _isTouchHeld = false;
+                _wasListeningBeforeDown = ClassicUO.MobileUI.MobileVoiceInput.IsListening;
             }
         }
 
@@ -134,25 +136,31 @@ namespace ClassicUO.Game.UI.Gumps
         {
             base.Update();
 
-            // Push-to-Talk детектор: если удерживаем палец более 300 мс без перетаскивания
+            // Push-to-Talk детектор: если удерживаем палец более 200 мс без перетаскивания
             if (_touchDownTime > 0 && Mouse.LButtonPressed)
             {
                 Point delta = Mouse.Position - _mouseDownPos;
                 if (Math.Abs(delta.X) < 16 && Math.Abs(delta.Y) < 16)
                 {
-                    if (!_isTouchHeld && Time.Ticks - _touchDownTime > 300)
+                    if (!_isTouchHeld && Time.Ticks - _touchDownTime >= 200)
                     {
                         _isTouchHeld = true;
+                        // Запускаем режим удержания (Push-to-Talk): слушать пока держим кнопку
                         if (!ClassicUO.MobileUI.MobileVoiceInput.IsListening)
                         {
-                            ClassicUO.MobileUI.MobileVoiceInput.StartListening(World);
+                            ClassicUO.MobileUI.MobileVoiceInput.StartListening(World, holdMode: true);
                         }
                     }
                 }
                 else
                 {
-                    // Палец сместился более 16 px — это перетаскивание кнопки, сбрасываем PTT
+                    // Палец сместился более 16 px — это перетаскивание кнопки, отменяем
+                    if (_isTouchHeld)
+                    {
+                        ClassicUO.MobileUI.MobileVoiceInput.Cancel();
+                    }
                     _touchDownTime = 0;
+                    _isTouchHeld = false;
                 }
             }
         }
@@ -168,30 +176,33 @@ namespace ClassicUO.Game.UI.Gumps
 
             Point delta = Mouse.Position - _mouseDownPos;
 
-            // Если палец не двигался далеко (чистый тап, а не перетаскивание кнопки)
+            // Если палец не двигался далеко (чистый тап или удержание, а не перетаскивание кнопки)
             if (Math.Abs(delta.X) < 16 && Math.Abs(delta.Y) < 16)
             {
                 if (_isTouchHeld)
                 {
-                    // Завершение Push-to-Talk
+                    // Завершение режима удержания (Push-to-Talk): отпустили палец -> сразу останавливаем запись и распознаём!
                     ClassicUO.MobileUI.MobileVoiceInput.StopListening();
                 }
                 else
                 {
-                    // Одиночный тап (переключение состояния вкл/выкл)
-                    if (ClassicUO.MobileUI.MobileVoiceInput.IsListening)
+                    // Одиночный тап (длительность < 200 мс)
+                    if (_wasListeningBeforeDown || ClassicUO.MobileUI.MobileVoiceInput.IsListening)
                     {
+                        // Если уже слушал — повторный тап выключает
                         ClassicUO.MobileUI.MobileVoiceInput.StopListening();
                     }
                     else
                     {
-                        ClassicUO.MobileUI.MobileVoiceInput.StartListening(World);
+                        // Нажали одиночным тапом: обычный режим со стандартным таймаутом (как раньше)
+                        ClassicUO.MobileUI.MobileVoiceInput.StartListening(World, holdMode: false);
                     }
                 }
             }
 
             _touchDownTime = 0;
             _isTouchHeld = false;
+            _wasListeningBeforeDown = false;
         }
 
         public override bool Draw(UltimaBatcher2D batcher, int x, int y)

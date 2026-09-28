@@ -16,6 +16,9 @@ public class VoiceRecognizerHelper {
     private static final String TAG = "MidlaVoice";
     private static SpeechRecognizer speechRecognizer;
     private static Handler mainHandler;
+    private static volatile boolean isHolding = false;
+    private static final StringBuilder accumulatedText = new StringBuilder();
+    private static Intent savedIntent;
 
     public interface Callback {
         void onReady();
@@ -42,10 +45,17 @@ public class VoiceRecognizerHelper {
     }
 
     public static void start(final Activity activity, final String language, final Callback callback) {
+        start(activity, language, false, callback);
+    }
+
+    public static void start(final Activity activity, final String language, final boolean holdMode, final Callback callback) {
         getHandler().post(new Runnable() {
             @Override
             public void run() {
                 try {
+                    isHolding = holdMode;
+                    accumulatedText.setLength(0);
+
                     if (speechRecognizer != null) {
                         try {
                             speechRecognizer.destroy();
@@ -82,14 +92,38 @@ public class VoiceRecognizerHelper {
 
                         @Override
                         public void onEndOfSpeech() {
-                            Log.d(TAG, "onEndOfSpeech");
-                            if (callback != null) callback.onEndOfSpeech();
+                            Log.d(TAG, "onEndOfSpeech (isHolding=" + isHolding + ")");
+                            if (!isHolding && callback != null) {
+                                callback.onEndOfSpeech();
+                            }
                         }
 
                         @Override
                         public void onError(int error) {
+                            Log.w(TAG, "onError: " + error + " (isHolding=" + isHolding + ")");
+
+                            // В режиме удержания: если пауза в речи или таймаут, пока кнопка зажата — перезапускаем и продолжаем слушать!
+                            if (isHolding && (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || error == SpeechRecognizer.ERROR_NO_MATCH)) {
+                                Log.d(TAG, "Silence in hold mode, continuing listening...");
+                                try {
+                                    speechRecognizer.startListening(savedIntent);
+                                } catch (Throwable t) {
+                                    Log.w(TAG, "restart listening error: " + t.getMessage());
+                                }
+                                return;
+                            }
+
+                            // Если кнопку уже отпустили и есть накопленный текст — отдаем его игроку
+                            if (!isHolding && accumulatedText.length() > 0 &&
+                                (error == SpeechRecognizer.ERROR_SPEECH_TIMEOUT || error == SpeechRecognizer.ERROR_NO_MATCH)) {
+                                String fullResult = accumulatedText.toString().trim();
+                                accumulatedText.setLength(0);
+                                if (callback != null) callback.onResults(fullResult);
+                                return;
+                            }
+
+                            accumulatedText.setLength(0);
                             String msg = getErrorMessage(error);
-                            Log.w(TAG, "onError: " + error + " (" + msg + ")");
                             if (callback != null) callback.onError(error, msg);
                         }
 
@@ -102,8 +136,36 @@ public class VoiceRecognizerHelper {
                                     bestResult = matches.get(0);
                                 }
                             }
-                            Log.d(TAG, "onResults: " + bestResult);
-                            if (callback != null) callback.onResults(bestResult);
+                            Log.d(TAG, "onResults: " + bestResult + " (isHolding=" + isHolding + ")");
+
+                            if (isHolding) {
+                                // Кнопка ещё зажата! Сохраняем распознанный фрагмент и продолжаем слушать
+                                if (bestResult != null && !bestResult.trim().isEmpty()) {
+                                    if (accumulatedText.length() > 0) {
+                                        accumulatedText.append(" ");
+                                    }
+                                    accumulatedText.append(bestResult.trim());
+                                }
+                                try {
+                                    speechRecognizer.startListening(savedIntent);
+                                } catch (Throwable t) {
+                                    Log.w(TAG, "startListening in onResults error: " + t.getMessage());
+                                }
+                            } else {
+                                // Кнопка отпущена (или одиночный тап) — формируем финальный результат
+                                String fullResult;
+                                if (accumulatedText.length() > 0) {
+                                    if (bestResult != null && !bestResult.trim().isEmpty()) {
+                                        accumulatedText.append(" ").append(bestResult.trim());
+                                    }
+                                    fullResult = accumulatedText.toString().trim();
+                                } else {
+                                    fullResult = bestResult != null ? bestResult.trim() : "";
+                                }
+                                accumulatedText.setLength(0);
+                                Log.d(TAG, "Delivering final onResults: " + fullResult);
+                                if (callback != null) callback.onResults(fullResult);
+                            }
                         }
 
                         @Override
@@ -119,7 +181,16 @@ public class VoiceRecognizerHelper {
                     intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3);
                     intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, false);
 
-                    Log.d(TAG, "Starting speech recognition...");
+                    if (holdMode) {
+                        // В режиме удержания (Push-to-Talk): длинные таймауты (слушать пока держишь кнопку)
+                        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_MINIMUM_LENGTH_MILLIS, 60000L);
+                        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS, 60000L);
+                        intent.putExtra(RecognizerIntent.EXTRA_SPEECH_INPUT_POSSIBLY_COMPLETE_SILENCE_LENGTH_MILLIS, 60000L);
+                    }
+
+                    savedIntent = intent;
+
+                    Log.d(TAG, "Starting speech recognition (holdMode=" + holdMode + ")...");
                     speechRecognizer.startListening(intent);
                 } catch (Throwable t) {
                     Log.e(TAG, "startListening error", t);
@@ -135,6 +206,7 @@ public class VoiceRecognizerHelper {
         getHandler().post(new Runnable() {
             @Override
             public void run() {
+                isHolding = false;
                 if (speechRecognizer != null) {
                     try {
                         speechRecognizer.stopListening();
@@ -150,6 +222,8 @@ public class VoiceRecognizerHelper {
         getHandler().post(new Runnable() {
             @Override
             public void run() {
+                isHolding = false;
+                accumulatedText.setLength(0);
                 if (speechRecognizer != null) {
                     try {
                         speechRecognizer.cancel();

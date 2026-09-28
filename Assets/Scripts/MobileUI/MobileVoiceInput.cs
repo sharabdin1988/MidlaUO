@@ -123,9 +123,9 @@ namespace ClassicUO.MobileUI
 #endif
         }
 
-        public static void StartListening(World world = null)
+        public static void StartListening(World world = null, bool holdMode = false)
         {
-            Log.Info("[VoiceInput] StartListening called");
+            Log.Info($"[VoiceInput] StartListening called (holdMode={holdMode})");
             if (IsListening)
             {
                 return;
@@ -147,7 +147,7 @@ namespace ClassicUO.MobileUI
                 {
                     if (granted)
                     {
-                        StartListeningInternal(world);
+                        StartListeningInternal(world, holdMode);
                     }
                     else
                     {
@@ -157,10 +157,10 @@ namespace ClassicUO.MobileUI
                 return;
             }
 
-            StartListeningInternal(world);
+            StartListeningInternal(world, holdMode);
         }
 
-        private static void StartListeningInternal(World world)
+        private static void StartListeningInternal(World world, bool holdMode)
         {
             IsListening = true;
             CurrentState = VoiceState.Ready;
@@ -180,7 +180,7 @@ namespace ClassicUO.MobileUI
                 {
                     _callbackProxy ??= new VoiceCallbackProxy();
                     string lang = MobileUiTranslation.IsRussian ? "ru-RU" : "en-US";
-                    helper.CallStatic("start", activity, lang, _callbackProxy);
+                    helper.CallStatic("start", activity, lang, holdMode, _callbackProxy);
                 }
             }
             catch (Exception ex)
